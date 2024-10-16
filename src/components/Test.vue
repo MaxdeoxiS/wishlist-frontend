@@ -1,6 +1,7 @@
 <script setup>
 import { getLists } from '@/utils/api';
 import { useQueryClient, useQuery, useMutation } from '@tanstack/vue-query'
+import { Button } from "@/components/ui/button"
 
 // Access QueryClient instance
 const queryClient = useQueryClient()
@@ -29,6 +30,8 @@ function onButtonClick() {
 </script>
 
 <template>
+
+    <Button>Coucou</Button>
     <span v-if="isPending">Loading...</span>
     <span v-else-if="isError">Error: {{ error.message }}</span>
     <!-- We can assume by this point that `isSuccess === true` -->
