@@ -27,7 +27,7 @@ const mutation = useMutation({
 
 <template>
   <main>
-    <Wishlist v-if="data" :title=data.title :user=data.user :wish="data?.wish || []" :created_at="data.created_at"
+    <Wishlist v-if="data" :title=data.title :user=data.user :wishes="data?.wishes || []" :created_at="data.created_at"
       :onClick="(id) => mutation.mutate(id)" />
   </main>
 </template>

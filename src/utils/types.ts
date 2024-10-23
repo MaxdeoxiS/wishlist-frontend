@@ -1,5 +1,5 @@
 export type Wishlist = {
-    wish: Array<Wish>;
+    wishes: Array<Wish>;
     user: string;
     hash: string;
     title: string;
