@@ -1,6 +1,8 @@
-import type { CreateList, CreateWish, Wish, Wishlist } from "./types"
+import type { CreateList, CreateWish, Wishlist } from "./types"
 
-const baseUrl = "http://localhost:8080/list"
+const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
+
+const baseUrl = `${apiUrl}list`
 
 export async function getLists() {
     const res = await fetch(baseUrl)
