@@ -3,8 +3,11 @@ import { ref } from "vue"
 import { getUser } from "./storage"
 
 export const useUserStore = defineStore('counter', () => {
-    const localUsername = getUser() ?? "Jean eude"
-    const username = ref(localUsername)
+    const localUsername = getUser()
+    const username = ref(localUsername ?? "")
 
-    return { username }
+    function setUsername(newUsername: string) {
+      username.value = newUsername
+    }
+    return { username, setUsername }
   })

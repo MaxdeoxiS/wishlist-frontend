@@ -1,12 +1,14 @@
-import type { Wishlist } from "./types"
+import type { CreateList, CreateWish, Wish, Wishlist } from "./types"
+
+const baseUrl = "http://localhost:8080/list"
 
 export async function getLists() {
-    const res = await fetch("http://localhost:8080/list")
+    const res = await fetch(baseUrl)
     return await res.json()
 }
 
-export async function getList(hash: string): Promise<Wishlist | null> {
-    const res = await fetch(`http://localhost:8080/list/${hash}`)
+export async function getList(id: string): Promise<Wishlist | null> {
+    const res = await fetch(`${baseUrl}/${id}`)
     if (!res.ok) {
         return null;
     }
@@ -19,9 +21,9 @@ export async function getList(hash: string): Promise<Wishlist | null> {
     }
 }
 
-export async function setBought(hash: string, wishId: number, value: string) {
+export async function setBought(id: string, wishId: number, value: string | null) {
     try {
-        const res = await fetch(`http://localhost:8080/list/${hash}/wishes/${wishId}/toggle`, { body: JSON.stringify({ bought_by: value }), method: "PUT" })
+        const res = await fetch(`${baseUrl}/${id}/wishes/${wishId}/toggle`, { body: JSON.stringify({ bought_by: value }), method: "PUT" })
         if (!res.ok) {
             return null;
         }
@@ -36,5 +38,40 @@ export async function setBought(hash: string, wishId: number, value: string) {
     catch (e) {
         console.error(e)
     }
+}
 
+export async function addWish(id: string, data: CreateWish) {
+    try {
+        const res = await fetch(`${baseUrl}/${id}/wishes`, { body: JSON.stringify(data), method: "POST" })
+
+        if (!res.ok) {
+            return null
+        }
+        try {
+            return await res.json();
+        } catch (err) {
+            console.error('Error parsing JSON:', err);
+            return null;
+        }
+    } catch (e) {
+        console.error(e)
+    }
+}
+
+export async function createlist(data: CreateList): Promise<Wishlist | null | undefined> {
+    try {
+        const res = await fetch(`${baseUrl}`, { body: JSON.stringify(data), method: "POST" })
+
+        if (!res.ok) {
+            return null
+        }
+        try {
+            return await res.json();
+        } catch (err) {
+            console.error('Error parsing JSON:', err);
+            return null;
+        }
+    } catch (e) {
+        console.error(e)
+    }
 }

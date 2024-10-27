@@ -6,8 +6,18 @@ import {
     CircleUser,
 } from 'lucide-vue-next'
 import { useUserStore } from '@/utils/store'
+import { deleteUser, setList } from '@/utils/storage';
+import { useRouter } from 'vue-router';
 
 const store = useUserStore()
+const router = useRouter()
+
+function logout() {
+    deleteUser()
+    setList("")
+    store.setUsername("")
+    router.replace("/")
+}
 
 </script>
 
@@ -22,7 +32,7 @@ const store = useUserStore()
         <DropdownMenuContent align="end">
             <DropdownMenuLabel>{{ store.username }}</DropdownMenuLabel>
             <DropdownMenuSeparator />
-            <DropdownMenuItem>Déconnexion</DropdownMenuItem>
+            <DropdownMenuItem @click="logout">Déconnexion</DropdownMenuItem>
         </DropdownMenuContent>
     </DropdownMenu>
 </template>

@@ -11,7 +11,7 @@ const router = createRouter({
       component: HomeView
     },
     {
-      path: '/list/:hash',
+      path: '/list/:id',
       name: "list",
       component: ListView
     },
