@@ -5,6 +5,7 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import {
+    Ban,
     Gift,
     Slash,
 } from 'lucide-vue-next'
@@ -28,7 +29,6 @@ const boughtBySomeoneElse = computed(() =>
 )
 
 function onBuyAction() {
-    console.log(isBuyer.value)
     if (isBuyer.value) {
         onBuy(id, true)
         return
@@ -48,11 +48,16 @@ function onBuyAction() {
             </div>
         </TableCell>
         <TableCell v-if="!isAuthor" class="w-1/3 lg:pl-4">
-            <Button :data-disabled="isBuyer || boughtBySomeoneElse" :disabled="boughtBySomeoneElse"
-                class="w-fit float-right" size="lg" @click.stop="buyModalOpen = true">
-                <Gift class="lg:w-4 lg:h-4 lg:mr-2" />
-                <Slash v-if="bought_by" class="absolute lg:hidden" />
-                <span class="hidden lg:inline">{{ bought_by ? "Déjà pris" : "Acheter" }}</span>
+            <Button :disabled="boughtBySomeoneElse" class="w-fit float-right" size="lg" :variant="isBuyer ? 'secondary' : 'default'"
+                @click.stop="buyModalOpen = true">
+                <template v-if="isBuyer">
+                    <span>Annuler</span>
+                </template>
+                <template v-else>
+                    <Gift class="lg:w-4 lg:h-4 lg:mr-2" />
+                    <Slash v-if="bought_by" class="absolute lg:hidden" />
+                    <span class="hidden lg:inline">{{ bought_by ? "Déjà pris" : "Acheter" }}</span>
+                </template>
             </Button>
         </TableCell>
     </TableRow>

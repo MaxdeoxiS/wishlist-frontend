@@ -36,17 +36,15 @@ function onCreateList(data: CreateList) {
 <template>
   <ListHeader />
   <section class="bg-muted -mt-20">
-    <div class="mx-auto max-w-screen-xl px-4 py-32 lg:flex lg:h-screen lg:items-center">
-      http://localhost:3000/list/3624d5ae-3db5-4c5d-9954-e4ec9cbe74bb
+    <div class="mx-auto max-w-screen-xl px-4 py-32 flex flex-col h-screen items-center justify-center">
       <div class="mx-auto max-w-xl text-center">
         <h1 class="text-3xl font-extrabold sm:text-5xl">
-          Understand User Flow.
-          <strong class="font-extrabold text-red-700 sm:block"> Increase Conversion. </strong>
+          Noël, anniversaire ?
+          <strong class="font-extrabold text-red-700 sm:block"> Liste de souhaits connectée à partager </strong>
         </h1>
 
         <p class="mt-4 sm:text-xl/relaxed">
-          Lorem ipsum dolor sit amet consectetur, adipisicing elit. Nesciunt illo tenetur fuga ducimus
-          numquam ea!
+          Créez, organisez et partagez vos envies en un seul endroit et laissez vos proches savoir exactement ce qui vous ferait plaisir.
         </p>
 
         <div class="mt-8 flex flex-wrap justify-center gap-4">

@@ -10,7 +10,7 @@ import ListHeader from './ListHeader.vue';
 import { computed, ref } from 'vue';
 import CardFooter from './ui/card/CardFooter.vue';
 import Button from './ui/button/Button.vue';
-import { Plus } from 'lucide-vue-next';
+import { Plus, Share } from 'lucide-vue-next';
 import CreateWishModal from './modals/CreateWishModal.vue';
 import { useUserStore } from '@/utils/store';
 
@@ -31,9 +31,9 @@ const isAuthor = store.username === props.user
     <div class="flex min-h-screen w-full flex-col bg-muted">
         <ListHeader v-model:filter="filter" withList />
         <div class="flex flex-col sm:gap-4 sm:py-4 sm:pl-14">
-            <main class="grid flex-1 items-start gap-4 p-2 sm:px-6 sm:py-0 md:gap-8">
-                <Card>
-                    <CardHeader>
+            <main class="grid flex-1 items-start gap-4 p-0 sm:px-6 sm:py-0 md:gap-8">
+                <Card class="rounded-none sm:rounded-md">
+                    <CardHeader class="p-4">
                         <CardTitle>
                             {{ props.title }}</CardTitle>
                         <CardDescription>
@@ -42,7 +42,7 @@ const isAuthor = store.username === props.user
                                 Date(props.created_at)).toLocaleDateString() }}
                         </CardDescription>
                     </CardHeader>
-                    <CardContent class="p-4 pt-0">
+                    <CardContent class="p-2 pt-0">
                         <Table class="table-fixed w-full">
                             <TableBody>
                                 <Wish :class="{ 'border-none': i === filteredWishes.length - 1 }" @buy="props.onBuy"
@@ -50,11 +50,13 @@ const isAuthor = store.username === props.user
                             </TableBody>
                         </Table>
                     </CardContent>
-                    <CardFooter v-if="isAuthor" class="flex gap-x-2">
-                        <Button class="w-full" @click="addModalOpen = !addModalOpen">
+                    <CardFooter class="flex flex-col gap-2 p-2 px-4 mb-2">
+                        <Button v-if="isAuthor" class="w-full" @click="addModalOpen = !addModalOpen">
                             <Plus class="mr-1.5" /> Ajouter un wish
                         </Button>
-                            <Button @click="props.share">Partager</Button>
+                        <Button @click="props.share" class="w-full" variant="outline">
+                            <Share class="mr-1.5" /> Partager
+                        </Button>
                     </CardFooter>
                 </Card>
             </main>

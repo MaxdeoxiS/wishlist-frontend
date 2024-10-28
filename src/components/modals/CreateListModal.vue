@@ -22,7 +22,6 @@ const { handleSubmit } = useForm({
     validationSchema: formSchema,
     initialValues: {
         username: store.username,
-        title: "coucou!"
     },
 })
 
