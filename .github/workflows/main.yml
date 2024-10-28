@@ -23,3 +23,5 @@ jobs:
           aws-region: eu-west-1
       - name: Deploy to S3
         run: aws s3 sync dist ${{ secrets.AWS_S3_URL }} --delete
+      - name: Invalidate CloudFront Cache
+        run: aws cloudfront create-invalidation --distribution-id ${{ secrets.CLOUDFRONT_DISTRIBUTION_ID }} --paths "/*"
