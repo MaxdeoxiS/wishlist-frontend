@@ -36,7 +36,7 @@ function onAddWish(data: CreateWish) {
   addMutation.mutate(data)
 }
 
-function copy() {
+function share() {
   navigator.share({
     title: 'Check ma liste!',
     text: data.value?.title,
@@ -50,6 +50,6 @@ function copy() {
 <template>
   <main>
     <Wishlist v-if="data" :title=data.title :user=data.user :wishes="data?.wishes || []" :created_at="data.created_at"
-      @buy="(wishId, cancel) => mutation.mutate({ wishId, cancel })" :addWish="onAddWish" :copy="copy" />
+      @buy="(wishId, cancel) => mutation.mutate({ wishId, cancel })" :addWish="onAddWish" :share="share" />
   </main>
 </template>

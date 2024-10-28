@@ -16,7 +16,7 @@ import { useUserStore } from '@/utils/store';
 
 const store = useUserStore()
 
-const props = defineProps<Omit<Wishlist, "id"> & { onBuy: (wishId: number, cancel: boolean) => void, addWish: (wish: CreateWish) => void, copy: () => void }>()
+const props = defineProps<Omit<Wishlist, "id"> & { onBuy: (wishId: number, cancel: boolean) => void, addWish: (wish: CreateWish) => void, share: () => void }>()
 
 const filter = ref("")
 const filteredWishes = computed(() => props.wishes.filter(w => w.name.toLowerCase().includes(filter.value.toLowerCase())))
@@ -54,7 +54,7 @@ const isAuthor = store.username === props.user
                         <Button class="w-full" @click="addModalOpen = !addModalOpen">
                             <Plus class="mr-1.5" /> Ajouter un wish
                         </Button>
-                            <Button @click="props.copy">Copier l'URL</Button>
+                            <Button @click="props.share">Partager</Button>
                     </CardFooter>
                 </Card>
             </main>
