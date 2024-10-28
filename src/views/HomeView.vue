@@ -37,6 +37,7 @@ function onCreateList(data: CreateList) {
   <ListHeader />
   <section class="bg-muted -mt-20">
     <div class="mx-auto max-w-screen-xl px-4 py-32 lg:flex lg:h-screen lg:items-center">
+      http://localhost:3000/list/3624d5ae-3db5-4c5d-9954-e4ec9cbe74bb
       <div class="mx-auto max-w-xl text-center">
         <h1 class="text-3xl font-extrabold sm:text-5xl">
           Understand User Flow.

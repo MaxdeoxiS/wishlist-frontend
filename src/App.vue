@@ -3,6 +3,7 @@ import { onMounted } from 'vue';
 import { RouterView } from 'vue-router'
 import { useUserStore } from './utils/store';
 import { getUser } from './utils/storage';
+import { Toaster } from '@/components/ui/sonner'
 
 const store = useUserStore()
 
@@ -15,5 +16,6 @@ onMounted(() => {
 </script>
 
 <template>
+  <Toaster />
   <RouterView />
 </template>

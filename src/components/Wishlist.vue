@@ -16,14 +16,14 @@ import { useUserStore } from '@/utils/store';
 
 const store = useUserStore()
 
-const props = defineProps<Omit<Wishlist, "id"> & { onBuy: (wishId: number, cancel: boolean) => void, addWish: (wish: CreateWish) => void }>()
+const props = defineProps<Omit<Wishlist, "id"> & { onBuy: (wishId: number, cancel: boolean) => void, addWish: (wish: CreateWish) => void, copy: () => void }>()
 
 const filter = ref("")
 const filteredWishes = computed(() => props.wishes.filter(w => w.name.toLowerCase().includes(filter.value.toLowerCase())))
 
 const addModalOpen = ref(false)
 
-const isAuthor = store.username === props.user 
+const isAuthor = store.username === props.user
 
 </script>
 
@@ -45,8 +45,8 @@ const isAuthor = store.username === props.user
                     <CardContent class="p-4 pt-0">
                         <Table class="table-fixed w-full">
                             <TableBody>
-                                <Wish :class="{ 'border-none': i === filteredWishes.length - 1 }"
-                                    @buy="props.onBuy" v-for="(w, i) in filteredWishes" v-bind="w" :key="w.id" :isAuthor="isAuthor" />
+                                <Wish :class="{ 'border-none': i === filteredWishes.length - 1 }" @buy="props.onBuy"
+                                    v-for="(w, i) in filteredWishes" v-bind="w" :key="w.id" :isAuthor="isAuthor" />
                             </TableBody>
                         </Table>
                     </CardContent>
@@ -54,6 +54,7 @@ const isAuthor = store.username === props.user
                         <Button class="w-full" @click="addModalOpen = !addModalOpen">
                             <Plus class="mr-1.5" /> Ajouter un wish
                         </Button>
+                            <Button @click="props.copy">Copier l'URL</Button>
                     </CardFooter>
                 </Card>
             </main>
