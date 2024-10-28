@@ -19,8 +19,6 @@ const store = useUserStore()
 const createListeMutation = useMutation({
   mutationFn: (data: CreateList) => createlist(data),
   onSuccess: (data) => {
-    console.log("success")
-    console.log(data)
     if (data) {
       setList(data.id);
       setUser(data.user);
