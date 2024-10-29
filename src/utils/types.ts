@@ -10,7 +10,7 @@ export type Wish = {
     id: number;
     url?: string;
     name: string;
-    price: number;
+    price?: number;
     bought_by?: string;
     comment?: string;
     picture?: string;

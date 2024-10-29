@@ -13,7 +13,7 @@ const props = defineProps<{ wish: Wish, open: boolean; onClose: () => void; onBu
     <Dialog :open="props.open" @update:open="props.onClose">
         <DialogContent hide-close>
             <DialogHeader>
-                <DialogTitle class="flex justify-between">{{ wish.name }} <span>{{ wish.price }}€</span></DialogTitle>
+                <DialogTitle class="flex justify-between">{{ wish.name }} <span>{{ wish.price ?? "-" }}€</span></DialogTitle>
             </DialogHeader>
             <div>
                 <img v-if="wish.picture" :src="wish.picture" />

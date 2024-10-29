@@ -47,7 +47,7 @@ function onBuyAction() {
                 <a :href="url" target="_blank" :class="['font-medium w-fit', url ? 'underline' : '']">
                     {{ name }}
                 </a>
-                <span class="text-xs">{{ price }}€</span>
+                <span class="text-xs">{{ price ?? "-" }}€</span>
             </div>
         </TableCell>
         <TableCell class="w-1/3 lg:pl-4">

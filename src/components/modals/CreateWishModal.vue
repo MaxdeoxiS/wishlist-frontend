@@ -24,7 +24,7 @@ const loading = ref(false)
 const formSchema = toTypedSchema(z.object({
     url: z.union([z.undefined(), z.string().trim().url({ message: "URL incorrecte" })]),
     name: z.string({ message: "Veuillez saisir un nom" }).min(2, { message: "Nom trop court" }).max(140, { message: "Nom trop long" }),
-    price: z.number({ message: "Veuillez saisir un prix" }).min(0).max(99999),
+    price: z.optional(z.number().min(0).max(99999)),
     comment: z.optional(z.string()),
 }))
 
