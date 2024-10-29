@@ -8,20 +8,59 @@ import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
 import { Textarea } from '../ui/textarea';
 import type { CreateWish } from '@/utils/types';
+import { ref } from 'vue';
 
 const props = defineProps<{ open: boolean; onClose: () => void, add: (data: CreateWish) => void }>()
 
+const picture = ref()
+const fileUrl = ref<string>("")
 
 const formSchema = toTypedSchema(z.object({
     url: z.union([z.undefined(), z.string().trim().url({ message: "URL incorrecte" })]),
     name: z.string({ message: "Veuillez saisir un nom" }).min(2, { message: "Nom trop court" }).max(140, { message: "Nom trop long" }),
     price: z.number({ message: "Veuillez saisir un prix" }).min(0).max(99999),
-    comment: z.optional(z.string())
+    comment: z.optional(z.string()),
 }))
 
 const { handleSubmit } = useForm({
     validationSchema: formSchema,
 })
+
+const onUploadPicture = async () => {
+    if (!picture.value) {
+        return
+    }
+
+    const formData = new FormData()
+    formData.append("file", picture.value)
+
+    try {
+        // Use fetch to send the file to the backend
+        const response = await fetch("http://localhost:8080/list/file", {
+            method: "POST",
+            body: formData,
+        })
+
+        // Check if the response was successful
+        if (!response.ok) {
+            throw new Error(`Error uploading file: ${response.statusText}`)
+        }
+
+        const data = await response.json()
+        fileUrl.value = data.fileUrl // Store the URL of the uploaded file
+
+        console.log("File uploaded successfully:", data)
+    } catch (error) {
+        console.error("Error uploading file:", error)
+        alert("File upload failed.")
+    }
+
+}
+
+function handleFileChange(event: Event) {
+    const target = event.target as HTMLInputElement
+    picture.value = target.files ? target.files[0] : null
+}
 
 const onSubmit = handleSubmit((values) => {
     props.add(values)
@@ -73,6 +112,13 @@ const onSubmit = handleSubmit((values) => {
                         </FormControl>
                     </FormItem>
                 </FormField>
+                <Input type="file" @change="handleFileChange" />
+                <Button @click="onUploadPicture">
+                    Uploader
+                </Button>
+                <div v-if="fileUrl">
+                    <p>File uploaded successfully! <a :href="fileUrl" target="_blank">View File</a></p>
+                </div>
             </form>
             <DialogFooter>
                 <Button @click="onSubmit">

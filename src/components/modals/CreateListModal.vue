@@ -54,7 +54,8 @@ const onSubmit = handleSubmit((values) => {
                     <FormItem>
                         <FormLabel>Nom</FormLabel>
                         <FormControl>
-                            <Input :disabled="store.username" type="text" placeholder="Votre nom" v-bind="componentField" />
+                            <Input :disabled="store.username.length > 0" type="text" placeholder="Votre nom"
+                                v-bind="componentField" />
                         </FormControl>
                         <FormMessage />
                     </FormItem>
