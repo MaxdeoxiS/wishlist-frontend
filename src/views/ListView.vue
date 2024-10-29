@@ -48,8 +48,6 @@ function share() {
 </script>
 
 <template>
-  <main>
     <Wishlist v-if="data" :title=data.title :user=data.user :wishes="data?.wishes || []" :created_at="data.created_at"
       @buy="(wishId, cancel) => mutation.mutate({ wishId, cancel })" :addWish="onAddWish" :share="share" />
-  </main>
 </template>

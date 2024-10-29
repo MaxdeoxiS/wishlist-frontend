@@ -2,7 +2,7 @@
 import { useForm } from 'vee-validate';
 import { Button } from '../ui/button';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
-import { FormField, FormItem, FormLabel, FormControl, FormDescription, FormMessage } from '../ui/form';
+import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '../ui/form';
 import { Input } from '../ui/input';
 import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
@@ -31,7 +31,6 @@ const onSubmit = handleSubmit((values) => {
         user: username,
         title: title ?? `Liste de souhait de ${username}`
     })
-    props.onClose()
 })
 </script>
 

@@ -22,6 +22,7 @@ const createListeMutation = useMutation({
     if (data) {
       setList(data.id);
       setUser(data.user);
+      createListModalOpen.value = false
       store.setUsername(data.user)
       router.push(`/list/${data.id}`)
     }
@@ -39,19 +40,24 @@ function onCreateList(data: CreateList) {
     <div class="mx-auto max-w-screen-xl px-4 py-32 flex flex-col h-screen items-center justify-center">
       <div class="mx-auto max-w-xl text-center">
         <h1 class="text-3xl font-extrabold sm:text-5xl">
-          Noël, anniversaire ?
-          <strong class="font-extrabold text-red-700 sm:block"> Liste de souhaits connectée à partager </strong>
+          La liste de souhaits
+          <strong class="font-extrabold text-red-700 sm:block"> à partager à vos proches </strong>
         </h1>
 
         <p class="mt-4 sm:text-xl/relaxed">
-          Créez, organisez et partagez vos envies en un seul endroit et laissez vos proches savoir exactement ce qui vous ferait plaisir.
+          Créez, organisez et partagez vos envies en un seul endroit et laissez vos proches savoir exactement ce qui
+          vous ferait plaisir.
+        </p>
+        <p class="mt-2 sm:text-xl/relaxed">
+          Un seul lien, une liste connectée.
         </p>
 
         <div class="mt-8 flex flex-wrap justify-center gap-4">
-          <Button @click="createListModalOpen = true" size="lg">Créer une liste</Button>
+          <Button @click="createListModalOpen = true" size="lg">Créer ma liste</Button>
         </div>
       </div>
     </div>
   </section>
-  <CreateListModal :open="createListModalOpen" @close="createListModalOpen = false" :create="onCreateList" />
+  <CreateListModal v-if="createListModalOpen" :open="createListModalOpen" @close="createListModalOpen = false"
+    :create="onCreateList" />
 </template>

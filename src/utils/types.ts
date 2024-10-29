@@ -16,5 +16,5 @@ export type Wish = {
     picture?: string;
 }
 
-export type CreateWish = Omit<Wish, "id" | "bought_by" | "picture">
+export type CreateWish = Omit<Wish, "id" | "bought_by">
 export type CreateList = Omit<Wishlist, "id" | "created_at" | "wishes">

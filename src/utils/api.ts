@@ -77,3 +77,19 @@ export async function createlist(data: CreateList): Promise<Wishlist | null | un
         console.error(e)
     }
 }
+
+export async function uploadPicture(picture: File): Promise<{ url: string | null } | null> {
+    const formData = new FormData()
+    formData.append("file", picture)
+
+    const response = await fetch(`${baseUrl}/picture`, {
+        method: "POST",
+        body: formData,
+    })
+
+    if (!response.ok) {
+        return null
+    }
+
+    return await response.json()
+}
