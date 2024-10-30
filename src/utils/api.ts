@@ -93,3 +93,13 @@ export async function uploadPicture(picture: File): Promise<{ url: string | null
 
     return await response.json()
 }
+
+export async function deleteWish(listId: string, wishId: number) {
+    const res = await fetch(`${baseUrl}/${listId}/wishes/${wishId}`, {method: "DELETE"})
+
+    if (!res.ok) {
+        return null
+    }
+    
+    return true
+}

@@ -29,8 +29,8 @@ function logout() {
                 <span class="sr-only">Toggle user menu</span>
             </Button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end">
-            <DropdownMenuLabel v-if="store.username.length > 0">{{ store.username }}</DropdownMenuLabel>
+        <DropdownMenuContent v-if="store.username.length > 0" align="end">
+            <DropdownMenuLabel>{{ store.username }}</DropdownMenuLabel>
             <DropdownMenuSeparator />
             <DropdownMenuItem @click="logout">Déconnexion</DropdownMenuItem>
         </DropdownMenuContent>

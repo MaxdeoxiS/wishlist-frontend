@@ -41,7 +41,7 @@ function onCreateList(data: CreateList) {
       <div class="mx-auto max-w-xl text-center">
         <h1 class="text-3xl font-extrabold sm:text-5xl">
           La liste de souhaits
-          <strong class="font-extrabold text-red-700 sm:block"> à partager à vos proches </strong>
+          <strong class="font-extrabold text-red-700 sm:block"> à partager avec vos proches </strong>
         </h1>
 
         <p class="mt-4 sm:text-xl/relaxed">

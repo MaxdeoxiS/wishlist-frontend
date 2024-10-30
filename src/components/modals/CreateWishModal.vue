@@ -97,7 +97,7 @@ const onSubmit = handleSubmit(async (values) => {
                 </FormField>
                 <FormField v-slot="{ field }" name="price">
                     <FormItem>
-                        <FormLabel>Prix</FormLabel>
+                        <FormLabel>Prix (facultatif)</FormLabel>
                         <FormControl>
                             <Input type="number" placeholder="20€" v-bind="field" />
                         </FormControl>

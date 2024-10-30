@@ -10,7 +10,7 @@ function goHome() {
 
 <template>
     <div class="flex gap-x-2 ml-2 items-center cursor-pointer" @click="goHome">
-        <img src="../assets/images/logo3.png" width="30px" height="30px" alt="Logo" />
+        <img src="/logo.png" width="30px" height="30px" alt="Logo" />
         <span class="hidden lg:inline font-semibold">CheckMaListe</span>
     </div>
 </template>

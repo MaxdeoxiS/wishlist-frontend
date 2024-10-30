@@ -5,9 +5,10 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import {
-    Ban,
+    Edit,
     Gift,
     Slash,
+    Trash2,
 } from 'lucide-vue-next'
 import { type Wish } from '@/utils/types'
 import { computed, ref } from 'vue';
@@ -15,7 +16,7 @@ import BuyModal from './modals/BuyModal.vue';
 import { useUserStore } from '@/utils/store';
 import WishInfosModal from './modals/WishInfosModal.vue';
 
-const { id, bought_by, picture, url, comment, name, price, onBuy } = defineProps<Wish & { onBuy: (wishId: number, cancel: boolean) => void; isAuthor: boolean }>()
+const { id, bought_by, picture, url, comment, name, price, onBuy } = defineProps<Wish & { onBuy: (wishId: number, cancel: boolean) => void; isAuthor: boolean; onDelete: (wishId: number) => void }>()
 
 const buyModalOpen = ref(false)
 const infosModalOpen = ref(false)
@@ -51,7 +52,17 @@ function onBuyAction() {
             </div>
         </TableCell>
         <TableCell class="w-1/3 lg:pl-4">
-            <Button :disabled="boughtBySomeoneElse" class="w-fit float-right" size="lg"
+            <div v-if="isAuthor" class="flex gap-x-2  float-right">
+                <Button class="w-fit">
+                    <Edit class="lg:w-4 lg:h-4 lg:mr-2" />
+                    <span class="hidden lg:inline">Modifier</span>
+                </Button>
+                <Button class="w-fit" @click.stop="onDelete(id)">
+                    <Trash2 class="lg:w-4 lg:h-4 lg:mr-2" />
+                    <span class="hidden lg:inline">Supprimer</span>
+                </Button>
+            </div>
+            <Button v-else :disabled="boughtBySomeoneElse" class="w-fit float-right" size="lg"
                 :variant="isBuyer ? 'secondary' : 'default'" @click.stop="buyModalOpen = true">
                 <template v-if="isBuyer">
                     <span>Annuler</span>

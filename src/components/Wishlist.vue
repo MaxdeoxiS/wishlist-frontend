@@ -16,7 +16,7 @@ import { useUserStore } from '@/utils/store';
 
 const store = useUserStore()
 
-const props = defineProps<Omit<Wishlist, "id"> & { onBuy: (wishId: number, cancel: boolean) => void, addWish: (wish: CreateWish) => void, share: () => void }>()
+const props = defineProps<Omit<Wishlist, "id"> & { onBuy: (wishId: number, cancel: boolean) => void, onCreate: (wish: CreateWish) => void, share: () => void, onDelete: (wishId: number) => void }>()
 
 const filter = ref("")
 const filteredWishes = computed(() => props.wishes.filter(w => w.name.toLowerCase().includes(filter.value.toLowerCase())))
@@ -30,7 +30,7 @@ const isAuthor = store.username === props.user
 <template>
     <div class="flex min-h-screen w-full flex-col bg-muted">
         <ListHeader v-model:filter="filter" withList />
-        <div class="flex flex-col sm:gap-4 sm:py-4 sm:p-14">
+        <div class="flex flex-col sm:gap-4 sm:py-4 sm:p-14 md:max-w-[1080px] md:mx-auto">
             <main class="grid flex-1 items-start gap-4 p-0 sm:px-6 sm:py-0 md:gap-8">
                 <Card class="rounded-none sm:rounded-md">
                     <CardHeader class="p-4">
@@ -45,7 +45,7 @@ const isAuthor = store.username === props.user
                     <CardContent class="p-2 pt-0">
                         <Table class="table-fixed w-full">
                             <TableBody>
-                                <Wish :class="{ 'border-none': i === filteredWishes.length - 1 }" @buy="props.onBuy"
+                                <Wish :class="{ 'border-none': i === filteredWishes.length - 1 }" @buy="props.onBuy" @delete="props.onDelete"
                                     v-for="(w, i) in filteredWishes" v-bind="w" :key="w.id" :isAuthor="isAuthor" />
                             </TableBody>
                         </Table>
@@ -62,5 +62,5 @@ const isAuthor = store.username === props.user
             </main>
         </div>
     </div>
-    <CreateWishModal :open="addModalOpen" @close="addModalOpen = false" :add="props.addWish" />
+    <CreateWishModal :open="addModalOpen" @close="addModalOpen = false" :add="props.onCreate" />
 </template>
