@@ -8,7 +8,6 @@ import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
 import { useUserStore } from '@/utils/store';
 import FormDescription from '../ui/form/FormDescription.vue';
-import { setUser } from '@/utils/storage';
 
 const props = defineProps<{ open: boolean; onClose: () => void, onValidate: () => void; wishName: string }>()
 
@@ -27,7 +26,6 @@ const { handleSubmit } = useForm({
 
 const onSubmit = handleSubmit((values) => {
     if (!store.username) {
-        setUser(values.name)
         store.setUsername(values.name)
     }
     props.onValidate()

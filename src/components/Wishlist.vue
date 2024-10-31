@@ -10,9 +10,10 @@ import ListHeader from './ListHeader.vue';
 import { computed, ref } from 'vue';
 import CardFooter from './ui/card/CardFooter.vue';
 import Button from './ui/button/Button.vue';
-import { Plus, Share } from 'lucide-vue-next';
+import { Edit, Plus, Share } from 'lucide-vue-next';
 import CreateWishModal from './modals/CreateWishModal.vue';
 import { useUserStore } from '@/utils/store';
+import TakeListOwnership from './modals/TakeListOwnership.vue';
 
 const store = useUserStore()
 
@@ -22,8 +23,9 @@ const filter = ref("")
 const filteredWishes = computed(() => props.wishes.filter(w => w.name.toLowerCase().includes(filter.value.toLowerCase())))
 
 const addModalOpen = ref(false)
+const ownershipModalOpen = ref(false)
 
-const isAuthor = store.username === props.user
+const isAuthor = computed(() => store.username === props.user)
 
 </script>
 
@@ -33,20 +35,27 @@ const isAuthor = store.username === props.user
         <div class="flex flex-col sm:gap-4 sm:py-4 sm:p-14 md:max-w-[1080px] md:mx-auto">
             <main class="grid flex-1 items-start gap-4 p-0 sm:px-6 sm:py-0 md:gap-8">
                 <Card class="rounded-none sm:rounded-md">
-                    <CardHeader class="p-4">
-                        <CardTitle>
-                            {{ props.title }}</CardTitle>
-                        <CardDescription>
-                            Créé par
-                            <span class="font-medium">{{ props.user }}</span> le {{ (new
-                                Date(props.created_at)).toLocaleDateString() }}
-                        </CardDescription>
-                    </CardHeader>
+                    <div class="flex justify-between">
+                        <CardHeader class="p-4 flex flex-col">
+                            <CardTitle>
+                                {{ props.title }}
+                            </CardTitle>
+                            <CardDescription>
+                                Créé par
+                                <span class="font-medium">{{ props.user }}</span> le {{ (new
+                                    Date(props.created_at)).toLocaleDateString() }}
+                            </CardDescription>
+                        </CardHeader>
+                        <Button v-if="store.username.length === 0" variant="ghost" class="m-2" @click="ownershipModalOpen = true">
+                            <Edit />
+                        </Button>
+                    </div>
                     <CardContent class="p-2 pt-0">
                         <Table class="table-fixed w-full">
                             <TableBody>
-                                <Wish :class="{ 'border-none': i === filteredWishes.length - 1 }" @buy="props.onBuy" @delete="props.onDelete"
-                                    v-for="(w, i) in filteredWishes" v-bind="w" :key="w.id" :isAuthor="isAuthor" />
+                                <Wish :class="{ 'border-none': i === filteredWishes.length - 1 }" @buy="props.onBuy"
+                                    @delete="props.onDelete" v-for="(w, i) in filteredWishes" v-bind="w" :key="w.id"
+                                    :isAuthor="isAuthor" />
                             </TableBody>
                         </Table>
                     </CardContent>
@@ -63,4 +72,5 @@ const isAuthor = store.username === props.user
         </div>
     </div>
     <CreateWishModal :open="addModalOpen" @close="addModalOpen = false" :add="props.onCreate" />
+    <TakeListOwnership :open="ownershipModalOpen" @close="ownershipModalOpen = false" :list-owner="props.user" />
 </template>

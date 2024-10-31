@@ -3,7 +3,7 @@ import ListHeader from '@/components/ListHeader.vue';
 import CreateListModal from '@/components/modals/CreateListModal.vue';
 import { Button } from '@/components/ui/button';
 import { createlist } from '@/utils/api';
-import { setList, setUser } from '@/utils/storage';
+import { setList } from '@/utils/storage';
 import { useUserStore } from '@/utils/store';
 import type { CreateList } from '@/utils/types';
 import { useMutation } from '@tanstack/vue-query';
@@ -21,7 +21,6 @@ const createListeMutation = useMutation({
   onSuccess: (data) => {
     if (data) {
       setList(data.id);
-      setUser(data.user);
       createListModalOpen.value = false
       store.setUsername(data.user)
       router.push(`/list/${data.id}`)

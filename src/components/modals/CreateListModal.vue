@@ -8,8 +8,11 @@ import { toTypedSchema } from '@vee-validate/zod'
 import * as z from 'zod'
 import type { CreateList } from '@/utils/types';
 import { useUserStore } from '@/utils/store';
+import { ref } from 'vue';
 
 const props = defineProps<{ open: boolean; onClose: () => void, create: (data: CreateList) => void }>()
+
+const loading = ref(false)
 
 const store = useUserStore()
 
@@ -26,11 +29,13 @@ const { handleSubmit } = useForm({
 })
 
 const onSubmit = handleSubmit((values) => {
+    loading.value = true
     const { title, username } = values
     props.create({
         user: username,
         title: title ?? `Liste de souhait de ${username}`
     })
+    loading.value = false
 })
 </script>
 
@@ -62,6 +67,7 @@ const onSubmit = handleSubmit((values) => {
             </form>
             <DialogFooter>
                 <Button @click="onSubmit">
+                    <Loader2 v-if="loading" class="w-4 h-4 mr-2 animate-spin" />
                     Valider
                 </Button>
             </DialogFooter>

@@ -53,10 +53,6 @@ function onBuyAction() {
         </TableCell>
         <TableCell class="w-1/3 lg:pl-4">
             <div v-if="isAuthor" class="flex gap-x-2  float-right">
-                <Button class="w-fit">
-                    <Edit class="lg:w-4 lg:h-4 lg:mr-2" />
-                    <span class="hidden lg:inline">Modifier</span>
-                </Button>
                 <Button class="w-fit" @click.stop="onDelete(id)">
                     <Trash2 class="lg:w-4 lg:h-4 lg:mr-2" />
                     <span class="hidden lg:inline">Supprimer</span>
