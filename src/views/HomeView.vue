@@ -44,7 +44,7 @@ function onCreateList(data: CreateList) {
         </h1>
 
         <p class="mt-4 sm:text-xl/relaxed">
-          Créez, organisez et partagez vos envies en un seul endroit et laissez vos proches savoir exactement ce qui
+          Créez, organisez et partagez vos idées cadeaux en un seul endroit et laissez vos proches savoir exactement ce qui
           vous ferait plaisir.
         </p>
         <p class="mt-2 sm:text-xl/relaxed">

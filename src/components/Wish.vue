@@ -15,6 +15,7 @@ import { computed, ref } from 'vue';
 import BuyModal from './modals/BuyModal.vue';
 import { useUserStore } from '@/utils/store';
 import WishInfosModal from './modals/WishInfosModal.vue';
+import { cn } from '@/lib/utils'
 
 const { id, bought_by, picture, url, comment, name, price, onBuy } = defineProps<Wish & { onBuy: (wishId: number, cancel: boolean) => void; isAuthor: boolean; onDelete: (wishId: number) => void }>()
 
@@ -44,7 +45,7 @@ function onBuyAction() {
 <template>
     <TableRow :class="$attrs.class" @click="infosModalOpen = true">
         <TableCell class="flex-1">
-            <div class="flex flex-col gap-y-1">
+            <div :class="cn('flex flex-col gap-y-1', bought_by && !isAuthor && 'line-through')">
                 <a :href="url" target="_blank" :class="['font-medium w-fit', url ? 'underline' : '']">
                     {{ name }}
                 </a>
@@ -72,7 +73,7 @@ function onBuyAction() {
         </TableCell>
     </TableRow>
 
-    <WishInfosModal v-if="infosModalOpen" :open="infosModalOpen"
+    <WishInfosModal v-if="infosModalOpen" :open="infosModalOpen" :is-author="isAuthor"
         :wish="{ id, bought_by, picture, url, comment, name, price }" @close="infosModalOpen
             = false" @buy="infosModalOpen = false; buyModalOpen = true" />
     <BuyModal :open="buyModalOpen" @close="buyModalOpen = false" @validate="onBuyAction" :wish-name="name" />

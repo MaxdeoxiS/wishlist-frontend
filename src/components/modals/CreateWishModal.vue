@@ -83,7 +83,7 @@ const onSubmit = handleSubmit(async (values) => {
     <Dialog :open="props.open" @update:open="props.onClose">
         <DialogContent>
             <DialogHeader>
-                <DialogTitle>Nouveau wish</DialogTitle>
+                <DialogTitle>Nouvelle idée cadeau</DialogTitle>
             </DialogHeader>
             <form @submit="onSubmit" class="space-y-6">
                 <FormField v-slot="{ field }" name="name">

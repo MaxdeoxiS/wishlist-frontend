@@ -6,7 +6,7 @@ import DialogFooter from '../ui/dialog/DialogFooter.vue';
 import { Button } from '../ui/button';
 import { Gift } from 'lucide-vue-next';
 
-const props = defineProps<{ wish: Wish, open: boolean; onClose: () => void; onBuy: () => void }>()
+const props = defineProps<{ wish: Wish, open: boolean; onClose: () => void; onBuy: () => void; isAuthor: boolean }>()
 </script>
 
 <template>
@@ -15,16 +15,19 @@ const props = defineProps<{ wish: Wish, open: boolean; onClose: () => void; onBu
             <DialogHeader>
                 <DialogTitle class="flex justify-between">{{ wish.name }} <span>{{ wish.price ?? "-" }}€</span></DialogTitle>
             </DialogHeader>
-            <div>
+            <div class="overflow-auto">
                 <img v-if="wish.picture" :src="wish.picture" />
-                <a class="underline" :href="wish.url" v-if="wish.url">{{ wish.url }}</a>
+                <a class="underline" :href="wish.url" v-if="wish.url">{{ wish.url.slice(0, 50) }}...</a>
                 <br v-if="wish.comment" />
                 <span v-if="wish.comment">{{ wish.comment }}</span>
             </div>
-            <DialogFooter v-if="!wish.bought_by">
-                <Button @click="onBuy">
+            <DialogFooter v-if="!isAuthor">
+                <Button v-if="!wish.bought_by" @click="onBuy">
                    <Gift class="mr-1.5" />Prendre
                 </Button>
+                <div v-else>
+                    Cadeau déjà pris par <b>{{ wish.bought_by }}</b>
+                </div>
             </DialogFooter>
         </DialogContent>
     </Dialog>
