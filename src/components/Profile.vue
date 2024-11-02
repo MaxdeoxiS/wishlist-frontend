@@ -6,9 +6,19 @@ import {
     CircleUser,
 } from 'lucide-vue-next'
 import { useUserStore } from '@/utils/store'
-import { clearLists, deleteUser } from '@/utils/storage';
+import { clearLists, deleteUser, getLists } from '@/utils/storage';
+import { computed } from 'vue';
+import router from '@/router';
 
 const store = useUserStore()
+
+const lists = computed(() => getLists())
+
+function goToList() {
+    if (lists.value && lists.value.length > 0) {
+        router.push(`/list/${lists.value[0]}`)
+    }
+}
 
 function logout() {
     deleteUser()
@@ -28,7 +38,7 @@ function logout() {
         </DropdownMenuTrigger>
         <DropdownMenuContent v-if="store.username.length > 0" align="end">
             <DropdownMenuLabel>{{ store.username }}</DropdownMenuLabel>
-            <!-- <DropdownMenuItem>Mes listes</DropdownMenuItem> -->
+            <DropdownMenuItem v-if="lists" @click="goToList">Ma liste</DropdownMenuItem>
             <DropdownMenuSeparator />
             <DropdownMenuItem @click="logout">Déconnexion</DropdownMenuItem>
         </DropdownMenuContent>

@@ -14,8 +14,8 @@ export function deleteUser() {
 }
 
 export function setList(id: string) {
-    const lists =  localStorage.getItem(LIST_KEY)
-    localStorage.setItem(LIST_KEY, `${lists},${id}`);
+    // const lists =  localStorage.getItem(LIST_KEY)
+    localStorage.setItem(LIST_KEY, `${id}`);
 }
 
 export async function clearLists() {
