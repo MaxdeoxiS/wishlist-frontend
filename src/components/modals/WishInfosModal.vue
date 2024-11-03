@@ -15,7 +15,7 @@ const props = defineProps<{ wish: Wish, open: boolean; onClose: () => void; onBu
             <DialogHeader>
                 <DialogTitle class="flex justify-between">{{ wish.name }} <span>{{ wish.price ?? "-" }}€</span></DialogTitle>
             </DialogHeader>
-            <div class="overflow-auto">
+            <div class="overflow-auto max-h-[66vh]">
                 <img v-if="wish.picture" :src="wish.picture" />
                 <a class="underline" :href="wish.url" v-if="wish.url">{{ wish.url.slice(0, 50) }}...</a>
                 <br v-if="wish.comment" />
