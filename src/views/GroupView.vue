@@ -23,7 +23,7 @@ const route = useRoute()
 const { id } = route.params
 const queryClient = useQueryClient()
 
-const { isPending, data, error } = useQuery({
+const { data } = useQuery({
   queryKey: ['group'],
   queryFn: () => getGroup(id as string)
 })
@@ -63,7 +63,7 @@ function share() {
 
 <template>
   <div class="flex min-h-screen w-full flex-col bg-muted">
-    <ListHeader withList />
+    <ListHeader />
     <div class="flex flex-col sm:gap-4 sm:py-4 sm:p-14 md:max-w-[1080px] md:mx-auto">
       <main class="grid flex-1 items-start gap-4 p-0 sm:px-6 sm:py-0 md:gap-8">
         <Card v-if="data" class="rounded-none sm:rounded-md">
@@ -72,8 +72,6 @@ function share() {
               <CardTitle>
                 {{ data.title }}
               </CardTitle>
-              <!-- <CardDescription>
-                            </CardDescription> -->
             </CardHeader>
           </div>
           <CardContent class="p-2 pt-0">

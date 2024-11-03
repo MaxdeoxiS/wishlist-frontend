@@ -20,6 +20,7 @@ export type Wish = {
     bought_by?: string;
     comment?: string;
     picture?: string;
+    created_at: string;
 }
 
 export type CreateWish = Omit<Wish, "id" | "bought_by">

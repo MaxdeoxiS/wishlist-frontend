@@ -7,6 +7,7 @@ import {
 import {
     Edit,
     Gift,
+    Image,
     Slash,
     Trash2,
 } from 'lucide-vue-next'
@@ -46,10 +47,13 @@ function onBuyAction() {
     <TableRow :class="$attrs.class" @click="infosModalOpen = true">
         <TableCell class="flex-1">
             <div :class="cn('flex flex-col gap-y-1', bought_by && !isAuthor && 'line-through')">
-                <a :href="url" target="_blank" :class="['font-medium w-fit', url ? 'underline' : '']">
-                    {{ name }}
+                <a :href="url" target="_blank"
+                    :class="['font-medium text-base w-fit flex items-center', url ? 'underline' : '']">
+                    <span v-if="picture">
+                        <Image class="w-4 h-4 mr-1 mt-[1px]" />
+                    </span>{{ name }}
                 </a>
-                <span class="text-xs">{{ price ?? "-" }}€</span>
+                <span class="text-sm">{{ price ?? "-" }}€</span>
             </div>
         </TableCell>
         <TableCell class="w-1/3 lg:pl-4">
@@ -59,22 +63,26 @@ function onBuyAction() {
                     <span class="hidden lg:inline">Supprimer</span>
                 </Button>
             </div>
-            <Button v-else :disabled="boughtBySomeoneElse" class="w-fit float-right" size="lg"
-                :variant="isBuyer ? 'secondary' : 'default'" @click.stop="buyModalOpen = true">
-                <template v-if="isBuyer">
-                    <span>Annuler</span>
-                </template>
-                <template v-else>
-                    <Gift class="lg:w-4 lg:h-4 lg:mr-2" />
-                    <Slash v-if="bought_by" class="absolute lg:hidden" />
-                    <span class="hidden lg:inline">{{ bought_by ? "Déjà pris" : "Prendre" }}</span>
-                </template>
-            </Button>
+            <template v-else class="float-right w-fit">
+                <div v-if="boughtBySomeoneElse" class="float-right">
+                    <p>Pris par <span class="font-medium">{{ bought_by }}</span></p>
+                </div>
+                <Button v-else :disabled="boughtBySomeoneElse" class="w-fit float-right" size="lg"
+                    :variant="isBuyer ? 'secondary' : 'default'" @click.stop="buyModalOpen = true">
+                    <template v-if="isBuyer">
+                        <span>Annuler</span>
+                    </template>
+                    <template v-else>
+                        <Gift class="lg:w-4 lg:h-4 lg:mr-2" />
+                        <span class="hidden lg:inline">{{ bought_by ? "Déjà pris" : "Prendre" }}</span>
+                    </template>
+                </Button>
+            </template>
         </TableCell>
     </TableRow>
 
     <WishInfosModal v-if="infosModalOpen" :open="infosModalOpen" :is-author="isAuthor"
-        :wish="{ id, bought_by, picture, url, comment, name, price }" @close="infosModalOpen
+        :wish="{ id, bought_by, picture, url, comment, name, price, created_at }" @close="infosModalOpen
             = false" @buy="infosModalOpen = false; buyModalOpen = true" />
     <BuyModal :open="buyModalOpen" @close="buyModalOpen = false" @validate="onBuyAction" :wish-name="name" />
 </template>

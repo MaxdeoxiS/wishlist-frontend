@@ -10,12 +10,12 @@ const route = useRoute()
 const { id } = route.params
 const queryClient = useQueryClient()
 
-const { isPending, data, error } = useQuery({
-  queryKey: ['wishlist'],
-  queryFn: () => getList(id as string)
-})
-
 const store = useUserStore()
+
+const { data } = useQuery({
+  queryKey: ['wishlist'],
+  queryFn: () => getList(id as string, store.username)
+})
 
 const mutation = useMutation({
   mutationFn: ({ wishId, cancel }: { wishId: number, cancel: boolean }) => setBought(id as string, wishId, cancel ? null : store.username),

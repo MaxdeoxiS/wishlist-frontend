@@ -4,14 +4,19 @@ const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
 
 const baseUrl = `${apiUrl}list`
 
-export async function getList(id: string): Promise<Wishlist | null> {
+export async function getList(id: string, username?: string): Promise<Wishlist | null> {
     const res = await fetch(`${baseUrl}/${id}`)
     if (!res.ok) {
         return null;
     }
 
     try {
-        return await res.json();
+        console.log(username)
+        const list = await res.json() as Wishlist;
+        if (username && list.user === username) {
+            return {...list, wishes: list.wishes.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())}
+        }
+        return list
     } catch (err) {
         console.error('Error parsing JSON:', err);
         return null;
