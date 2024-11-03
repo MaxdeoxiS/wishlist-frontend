@@ -1,3 +1,9 @@
+export type WishlistGroup = {
+    id: string;
+    title: string;
+    list: Wishlist[];
+}
+
 export type Wishlist = {
     wishes: Array<Wish>;
     user: string;

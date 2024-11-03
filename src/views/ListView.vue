@@ -2,10 +2,9 @@
 import Wishlist from '@/components/Wishlist.vue';
 import { addWish, deleteWish, getList, setBought } from '@/utils/api';
 import { useUserStore } from '@/utils/store';
-import type { CreateWish, Wish } from '@/utils/types';
+import type { CreateWish } from '@/utils/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { useRoute } from 'vue-router'
-import { toast } from 'vue-sonner';
 
 const route = useRoute()
 const { id } = route.params

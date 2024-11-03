@@ -10,7 +10,7 @@ import ListHeader from './ListHeader.vue';
 import { computed, ref } from 'vue';
 import CardFooter from './ui/card/CardFooter.vue';
 import Button from './ui/button/Button.vue';
-import { Edit, Plus, Share } from 'lucide-vue-next';
+import { Edit, Frown, Plus, Share } from 'lucide-vue-next';
 import CreateWishModal from './modals/CreateWishModal.vue';
 import { useUserStore } from '@/utils/store';
 import TakeListOwnership from './modals/TakeListOwnership.vue';
@@ -46,17 +46,22 @@ const isAuthor = computed(() => store.username === props.user)
                                     Date(props.created_at)).toLocaleDateString() }}
                             </CardDescription>
                         </CardHeader>
-                        <Button v-if="store.username.length === 0" variant="ghost" class="m-2" @click="ownershipModalOpen = true">
+                        <Button v-if="store.username.length === 0" variant="ghost" class="m-2"
+                            @click="ownershipModalOpen = true">
                             <Edit />
                         </Button>
                     </div>
                     <CardContent class="p-2 pt-0">
                         <Table class="table-fixed w-full">
-                            <TableBody>
+                            <TableBody v-if="filteredWishes.length > 0">
                                 <Wish :class="{ 'border-none': i === filteredWishes.length - 1 }" @buy="props.onBuy"
                                     @delete="props.onDelete" v-for="(w, i) in filteredWishes" v-bind="w" :key="w.id"
                                     :isAuthor="isAuthor" />
                             </TableBody>
+                            <div v-else class="p-4 flex flex-col items-center justify-center">
+                                <Frown class="w-16 h-16" />
+                                <p class="text-base font-medium mt-2">{{ props.user }} n'a pas encore rempli sa liste !</p>
+                            </div>
                         </Table>
                     </CardContent>
                     <CardFooter class="flex flex-col gap-2 p-2 px-4 mb-2">
