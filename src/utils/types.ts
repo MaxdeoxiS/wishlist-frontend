@@ -23,5 +23,5 @@ export type Wish = {
     created_at: string;
 }
 
-export type CreateWish = Omit<Wish, "id" | "bought_by">
+export type CreateWish = Omit<Wish, "id" | "bought_by" | "created_at">
 export type CreateList = Omit<Wishlist, "id" | "created_at" | "wishes">
