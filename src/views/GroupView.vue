@@ -81,7 +81,7 @@ function share() {
                   <TableCell>
                     <div class="flex text-base font-medium justify-between items-center p-4 py-2 rounded">
                       <p>{{ list.title }} {{ list.title.includes(list.user) ? "" : `(${list.user})` }}</p>
-                      <Button @click="share">
+                      <Button @click="goToList(list.id)">
                         Voir
                       </Button>
                     </div>
