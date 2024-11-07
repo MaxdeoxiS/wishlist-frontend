@@ -5,10 +5,8 @@ import {
     TableRow,
 } from '@/components/ui/table'
 import {
-    Edit,
     Gift,
     Image,
-    Slash,
     Trash2,
 } from 'lucide-vue-next'
 import { type Wish } from '@/utils/types'
@@ -47,7 +45,7 @@ function onBuyAction() {
     <TableRow :class="$attrs.class" @click="infosModalOpen = true">
         <TableCell class="flex-1">
             <div :class="cn('flex flex-col gap-y-1', bought_by && !isAuthor && 'line-through')">
-                <a :href="url" target="_blank"
+                <a :href="url" target="_blank" @click.stop=""
                     :class="['font-medium text-base w-fit flex items-center', url ? 'underline' : '']">
                     <span v-if="picture">
                         <Image class="w-4 h-4 mr-1 mt-[1px]" />

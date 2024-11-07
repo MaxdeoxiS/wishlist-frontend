@@ -11,7 +11,6 @@ export async function getList(id: string, username?: string): Promise<Wishlist |
     }
 
     try {
-        console.log(username)
         const list = await res.json() as Wishlist;
         if (username && list.user === username) {
             return {...list, wishes: list.wishes.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())}

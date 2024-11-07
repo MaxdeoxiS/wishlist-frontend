@@ -13,9 +13,10 @@ const props = defineProps<{ wish: Wish, open: boolean; onClose: () => void; onBu
     <Dialog :open="props.open" @update:open="props.onClose">
         <DialogContent hide-close>
             <DialogHeader>
-                <DialogTitle class="flex justify-between">{{ wish.name }} <span>{{ wish.price ?? "-" }}€</span></DialogTitle>
+                <DialogTitle class="flex justify-between">{{ wish.name }} <span>{{ wish.price ?? "-" }}€</span>
+                </DialogTitle>
             </DialogHeader>
-            <div class="overflow-auto max-h-[66vh]">
+            <div class="overflow-auto max-h-[50vh]">
                 <img v-if="wish.picture" :src="wish.picture" />
                 <a class="underline" :href="wish.url" v-if="wish.url">{{ wish.url.slice(0, 50) }}...</a>
                 <br v-if="wish.comment" />
@@ -23,7 +24,7 @@ const props = defineProps<{ wish: Wish, open: boolean; onClose: () => void; onBu
             </div>
             <DialogFooter v-if="!isAuthor">
                 <Button v-if="!wish.bought_by" @click="onBuy">
-                   <Gift class="mr-1.5" />Prendre
+                    <Gift class="mr-1.5" />Prendre
                 </Button>
                 <div v-else>
                     Cadeau déjà pris par <b>{{ wish.bought_by }}</b>

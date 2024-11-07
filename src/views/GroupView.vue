@@ -79,7 +79,7 @@ function share() {
               <TableBody>
                 <TableRow v-for="list of data.list" class="cursor-pointer" @click="goToList(list.id)">
                   <TableCell>
-                    <div class="flex text-base font-medium justify-between items-center p-4 py-2 rounded">
+                    <div class="flex text-base font-medium justify-between items-center rounded">
                       <p>{{ list.title }} {{ list.title.includes(list.user) ? "" : `(${list.user})` }}</p>
                       <Button @click="goToList(list.id)">
                         Voir
