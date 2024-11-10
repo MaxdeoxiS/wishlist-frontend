@@ -4,7 +4,7 @@ import type { Wish } from '@/utils/types';
 import DialogTitle from '../ui/dialog/DialogTitle.vue';
 import DialogFooter from '../ui/dialog/DialogFooter.vue';
 import { Button } from '../ui/button';
-import { Gift } from 'lucide-vue-next';
+import { Gift, LinkIcon } from 'lucide-vue-next';
 
 const props = defineProps<{ wish: Wish, open: boolean; onClose: () => void; onBuy: () => void; isAuthor: boolean }>()
 </script>
@@ -16,11 +16,10 @@ const props = defineProps<{ wish: Wish, open: boolean; onClose: () => void; onBu
                 <DialogTitle class="flex justify-between">{{ wish.name }} <span>{{ wish.price ?? "-" }}€</span>
                 </DialogTitle>
             </DialogHeader>
-            <div class="overflow-auto max-h-[50vh]">
-                <img v-if="wish.picture" :src="wish.picture" />
-                <a class="underline" :href="wish.url" v-if="wish.url">{{ wish.url.slice(0, 50) }}...</a>
-                <br v-if="wish.comment" />
+            <div class="overflow-auto flex flex-col max-h-[50vh]">
+                <a class="underline mb-4 flex gap-x-2 items-center" :href="wish.url" v-if="wish.url"><LinkIcon class="w-4 h-4" />{{ wish.url.slice(0, 50) }}...</a>
                 <span v-if="wish.comment">{{ wish.comment }}</span>
+                <img v-if="wish.picture" :src="wish.picture" />
             </div>
             <DialogFooter v-if="!isAuthor">
                 <Button v-if="!wish.bought_by" @click="onBuy">

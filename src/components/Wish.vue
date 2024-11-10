@@ -45,12 +45,12 @@ function onBuyAction() {
     <TableRow :class="$attrs.class" @click="infosModalOpen = true">
         <TableCell class="flex-1">
             <div :class="cn('flex flex-col gap-y-1', bought_by && !isAuthor && 'line-through')">
-                <a :href="url" target="_blank" @click.stop=""
+                <span
                     :class="['font-medium text-base w-fit flex items-center', url ? 'underline' : '']">
                     <span v-if="picture">
                         <Image class="w-4 h-4 mr-1 mt-[1px]" />
                     </span>{{ name }}
-                </a>
+                </span>
                 <span class="text-sm">{{ price ?? "-" }}€</span>
             </div>
         </TableCell>
