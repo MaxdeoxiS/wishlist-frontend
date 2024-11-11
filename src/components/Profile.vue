@@ -9,6 +9,7 @@ import { useUserStore } from '@/utils/store'
 import { clearLists, deleteUser, getLists } from '@/utils/storage';
 import { computed } from 'vue';
 import router from '@/router';
+import Avatar from './ui/avatar/Avatar.vue';
 
 const store = useUserStore()
 
@@ -32,7 +33,10 @@ function logout() {
     <DropdownMenu>
         <DropdownMenuTrigger as-child>
             <Button variant="secondary" size="icon" class="rounded-full">
-                <CircleUser class="h-5 w-5" />
+                <Avatar v-if="store.username" class="border border-2">
+                    {{ store.username.charAt(0) }}
+                </Avatar>
+                <CircleUser v-else class="h-5 w-5" />
             </Button>
         </DropdownMenuTrigger>
         <DropdownMenuContent v-if="store.username.length > 0" align="end">

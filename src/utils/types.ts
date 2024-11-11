@@ -10,6 +10,7 @@ export type Wishlist = {
     id: string;
     title: string;
     created_at: string;
+    groupId?: string;
 }
 
 export type Wish = {

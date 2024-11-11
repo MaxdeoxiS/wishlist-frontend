@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import Wishlist from '@/components/Wishlist.vue';
-import { addWish, deleteWish, getList, setBought } from '@/utils/api';
+import { addWish, deleteWish, getGroup, getList, setBought } from '@/utils/api';
 import { useUserStore } from '@/utils/store';
 import type { CreateWish } from '@/utils/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
+import { computed } from 'vue';
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
@@ -42,6 +43,15 @@ function onAddWish(data: CreateWish) {
   addMutation.mutate(data)
 }
 
+const groupId = computed(() => data.value?.groupId)
+const enabled = computed(() => !!data.value?.groupId)
+
+const { data: group } = useQuery({
+  queryKey: ['group',  groupId],
+  queryFn: () => getGroup(groupId.value as string),
+  enabled
+})
+
 function share() {
   navigator.share({
     title: 'Check ma liste!',
@@ -52,6 +62,6 @@ function share() {
 </script>
 
 <template>
-    <Wishlist v-if="data" :title=data.title :user=data.user :wishes="data?.wishes || []" :created_at="data.created_at"
+    <Wishlist v-if="data" :title=data.title :user=data.user :wishes="data?.wishes || []" :created_at="data.created_at" :group="group"
       @buy="(wishId, cancel) => mutation.mutate({ wishId, cancel })" @create="onAddWish" @delete="id => deleteMutation.mutate(id)" :share="share" />
 </template>
