@@ -94,10 +94,10 @@ const isAuthor = computed(() => store.username === props.user)
                     </CardContent>
                     <CardFooter class="flex flex-col gap-2 p-2 px-4 mb-2">
                         <Button v-if="isAuthor" class="w-full" @click="addModalOpen = !addModalOpen">
-                            <Plus class="mr-1.5" /> Ajouter un wish
+                            <Plus class="mr-1.5" /> Ajouter une idée cadeau
                         </Button>
                         <Button @click="props.share" class="w-full" variant="outline">
-                            <Share class="mr-1.5" /> Partager
+                            <Share class="mr-1.5" /> Partager la liste
                         </Button>
                     </CardFooter>
                 </Card>
