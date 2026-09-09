@@ -16,6 +16,6 @@ onMounted(() => {
 </script>
 
 <template>
-  <Toaster />
+  <Toaster position="top-center" :close-button="true" :duration="3500" />
   <RouterView />
 </template>

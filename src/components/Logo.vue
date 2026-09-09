@@ -9,8 +9,8 @@ function goHome() {
 </script>
 
 <template>
-    <div class="flex gap-x-2 ml-2 items-center cursor-pointer" @click="goHome">
-        <img src="/logo.png" width="30px" height="30px" alt="Logo" />
-        <span class="hidden lg:inline font-semibold">CheckMaListe</span>
+    <div class="flex gap-2 items-center cursor-pointer select-none active:scale-95 transition-transform" @click="goHome">
+        <img src="/logo.png" width="32px" height="32px" alt="Logo" class="rounded-lg shadow-sm" />
+        <span class="font-bold text-base sm:text-lg tracking-tight text-foreground">CheckMaListe</span>
     </div>
 </template>

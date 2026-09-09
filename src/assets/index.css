@@ -64,4 +64,41 @@
     --input:0 0% 14.9%;
     --ring:0 72.2% 50.6%;
   }
+
+  * {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    background-color: hsl(var(--background));
+    color: hsl(var(--foreground));
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+    overscroll-behavior-y: none;
+  }
+}
+
+/* Mobile Safe Areas */
+.pb-safe {
+  padding-bottom: calc(env(safe-area-inset-bottom, 0px) + 1rem);
+}
+.pt-safe {
+  padding-top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
+}
+
+/* List Vue TransitionGroup */
+.wish-list-move,
+.wish-list-enter-active,
+.wish-list-leave-active {
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.wish-list-enter-from,
+.wish-list-leave-to {
+  opacity: 0;
+  transform: translateY(12px) scale(0.97);
+}
+
+.wish-list-leave-active {
+  position: absolute;
+  width: 100%;
 }

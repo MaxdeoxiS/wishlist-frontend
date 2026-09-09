@@ -1,6 +1,7 @@
 import type { CreateList, CreateWish, Wishlist, WishlistGroup } from "./types"
 
-const apiUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
+const rawUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
+const apiUrl = rawUrl.endsWith("/") ? rawUrl : `${rawUrl}/`
 
 const baseUrl = `${apiUrl}list`
 
@@ -13,7 +14,12 @@ export async function getList(id: string, username?: string): Promise<Wishlist |
     try {
         const list = await res.json() as Wishlist;
         if (username && list.user === username) {
-            return {...list, wishes: list.wishes.sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())}
+            return {
+                ...list,
+                wishes: list.wishes
+                    .map(w => ({ ...w, bought_by: undefined }))
+                    .sort((a, b) => new Date(a.created_at).getTime() - new Date(b.created_at).getTime())
+            }
         }
         return list
     } catch (err) {
