@@ -97,20 +97,74 @@ export async function createlist(data: CreateList, groupId?: string): Promise<Wi
     }
 }
 
-export async function uploadPicture(picture: File): Promise<{ url: string | null } | null> {
-    const formData = new FormData()
-    formData.append("file", picture)
+export async function uploadPicture(picture: File): Promise<{ url: string | null; error?: string }> {
+    // 1. Try presigned S3 URL first (direct S3 upload, bypassing serverless limits)
+    try {
+        const presignedRes = await fetch(`${baseUrl}/picture/upload-url`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                filename: picture.name,
+                contentType: picture.type || "image/jpeg",
+            }),
+        });
 
-    const response = await fetch(`${baseUrl}/picture`, {
-        method: "POST",
-        body: formData,
-    })
+        if (presignedRes.ok) {
+            const { uploadUrl, publicUrl } = await presignedRes.json();
+            if (uploadUrl && publicUrl) {
+                const s3Upload = await fetch(uploadUrl, {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": picture.type || "image/jpeg",
+                    },
+                    body: picture,
+                });
 
-    if (!response.ok) {
-        return null
+                if (s3Upload.ok) {
+                    return { url: publicUrl };
+                } else {
+                    console.error("S3 direct upload failed:", s3Upload.status);
+                    return { url: null, error: `Erreur d'envoi vers le stockage (${s3Upload.status})` };
+                }
+            }
+        }
+    } catch (e) {
+        console.warn("Presigned upload unavailable or failed, falling back to direct backend:", e);
     }
 
-    return await response.json()
+    // 2. Fallback to direct backend upload via /list/picture
+    try {
+        const formData = new FormData();
+        formData.append("file", picture);
+
+        const response = await fetch(`${baseUrl}/picture`, {
+            method: "POST",
+            body: formData,
+        });
+
+        if (!response.ok) {
+            let errorDetail = "";
+            try {
+                const errJson = await response.json();
+                errorDetail = errJson.error || errJson.message || "";
+            } catch {
+                errorDetail = await response.text().catch(() => "");
+            }
+            return {
+                url: null,
+                error: errorDetail || `Erreur serveur (${response.status})`,
+            };
+        }
+
+        const data = await response.json();
+        return { url: data?.url ?? null };
+    } catch (err: any) {
+        console.error("Error uploading picture:", err);
+        return {
+            url: null,
+            error: err?.message || "Erreur de connexion au serveur",
+        };
+    }
 }
 
 export async function deleteWish(listId: string, wishId: number) {

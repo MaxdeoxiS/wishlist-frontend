@@ -3,7 +3,7 @@ import Wishlist from '@/components/Wishlist.vue';
 import ListHeader from '@/components/ListHeader.vue';
 import { addWish, deleteWish, getGroup, getList, setBought } from '@/utils/api';
 import { useUserStore } from '@/utils/store';
-import type { CreateWish } from '@/utils/types';
+import type { CreateWish, Wish, Wishlist as WishlistData } from '@/utils/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router'
@@ -37,8 +37,38 @@ const mutation = useMutation({
 
 const addMutation = useMutation({
   mutationFn: (data: CreateWish) => addWish(id as string, data),
+  onMutate: async (newWish: CreateWish) => {
+    await queryClient.cancelQueries({ queryKey: ['wishlist', id] })
+    const previousWishlist = queryClient.getQueryData<WishlistData>(['wishlist', id])
+
+    if (previousWishlist) {
+      const optimisticWish: Wish = {
+        id: -Date.now(),
+        name: newWish.name,
+        price: newWish.price,
+        url: newWish.url,
+        comment: newWish.comment,
+        picture: newWish.picture,
+        created_at: new Date().toISOString(),
+      }
+      queryClient.setQueryData<WishlistData>(['wishlist', id], {
+        ...previousWishlist,
+        wishes: [...previousWishlist.wishes, optimisticWish]
+      })
+    }
+
+    return { previousWishlist }
+  },
+  onError: (_err, _newWish, context) => {
+    if (context?.previousWishlist) {
+      queryClient.setQueryData(['wishlist', id], context.previousWishlist)
+    }
+    toast.error("Erreur lors de l'ajout de l'idée cadeau")
+  },
+  onSettled: () => {
+    queryClient.invalidateQueries({ queryKey: ['wishlist', id] })
+  },
   onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['wishlist'] })
     toast.success('Idée cadeau ajoutée ! ✨')
   },
 })

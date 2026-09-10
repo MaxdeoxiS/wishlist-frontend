@@ -10,6 +10,8 @@ import { Textarea } from '../ui/textarea';
 import type { CreateWish } from '@/utils/types';
 import { ref } from 'vue';
 import { uploadPicture } from '@/utils/api';
+import { compressImage } from '@/utils/image';
+import { toast } from 'vue-sonner';
 import { Loader2, Plus, Sparkles, UploadCloud, X, ImageIcon, LinkIcon } from 'lucide-vue-next'
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024
@@ -33,13 +35,20 @@ const { handleSubmit, resetForm } = useForm({
     validationSchema: formSchema,
 })
 
-const onUploadPicture = async () => {
+const onUploadPicture = async (): Promise<string | null> => {
     if (!picture.value) {
         return null
     }
 
-    const res = await uploadPicture(picture.value)
-    return res?.url
+    // Compress client-side to ensure fast uploads and prevent hitting payload limits
+    const fileToUpload = await compressImage(picture.value)
+    const res = await uploadPicture(fileToUpload)
+
+    if (res.error || !res.url) {
+        throw new Error(res.error || "Échec de l'envoi de l'image (erreur serveur 500).")
+    }
+
+    return res.url
 }
 
 function handleFileChange(event: Event) {
@@ -81,12 +90,26 @@ const onSubmit = handleSubmit(async (values) => {
     }
     loading.value = true
     try {
-        const fileUrl = await onUploadPicture()
+        let fileUrl: string | null = null
+        if (picture.value) {
+            try {
+                fileUrl = await onUploadPicture()
+            } catch (err: any) {
+                const message = err?.message || "Échec de l'envoi de l'image (erreur serveur 500)."
+                pictureError.value = message
+                toast.error(message)
+                return
+            }
+        }
+
         const data = { ...values, picture: fileUrl ?? undefined }
         props.add(data)
         resetForm()
         removePicture()
         props.onClose()
+    } catch (err: any) {
+        console.error("Error submitting wish:", err)
+        toast.error("Une erreur est survenue lors de l'ajout de l'idée cadeau")
     } finally {
         loading.value = false
     }
