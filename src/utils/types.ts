@@ -1,6 +1,7 @@
 export type WishlistGroup = {
     id: string;
     title: string;
+    created_at?: string;
     list: Wishlist[];
 }
 
@@ -26,3 +27,6 @@ export type Wish = {
 
 export type CreateWish = Omit<Wish, "id" | "bought_by" | "created_at">
 export type CreateList = Omit<Wishlist, "id" | "created_at" | "wishes">
+export type CreateGroup = {
+    title: string;
+}

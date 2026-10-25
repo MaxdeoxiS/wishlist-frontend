@@ -1,9 +1,18 @@
-import type { CreateList, CreateWish, Wishlist, WishlistGroup } from "./types"
+import type { CreateGroup, CreateList, CreateWish, Wishlist, WishlistGroup } from "./types"
 
 const rawUrl = import.meta.env.VITE_API_URL ?? "http://localhost:8080"
 const apiUrl = rawUrl.endsWith("/") ? rawUrl : `${rawUrl}/`
 
 const baseUrl = `${apiUrl}list`
+
+export function extractListId(input: string): string {
+    const trimmed = input.trim();
+    const match = trimmed.match(/\/list\/([a-zA-Z0-9_-]+)/);
+    if (match && match[1]) {
+        return match[1];
+    }
+    return trimmed.split("?")[0].split("#")[0].replace(/\/+$/, "");
+}
 
 export async function getList(id: string, username?: string): Promise<Wishlist | null> {
     const res = await fetch(`${baseUrl}/${id}`)
@@ -39,6 +48,82 @@ export async function getGroup(id: string): Promise<WishlistGroup | null> {
     } catch (err) {
         console.error('Error parsing JSON:', err);
         return null;
+    }
+}
+
+export async function createGroup(data: CreateGroup): Promise<WishlistGroup | null> {
+    try {
+        const res = await fetch(`${apiUrl}group`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+
+        if (!res.ok) {
+            return null;
+        }
+
+        return await res.json();
+    } catch (e) {
+        console.error("Error creating group:", e);
+        return null;
+    }
+}
+
+export async function updateGroup(id: string, data: { title: string }): Promise<WishlistGroup | null> {
+    try {
+        const res = await fetch(`${apiUrl}group/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+
+        if (!res.ok) {
+            return null;
+        }
+
+        return await res.json();
+    } catch (e) {
+        console.error("Error updating group:", e);
+        return null;
+    }
+}
+
+export async function addListToGroup(groupId: string, urlOrId: string): Promise<{ success: boolean; data?: Wishlist; error?: string }> {
+    try {
+        const listId = extractListId(urlOrId);
+        const res = await fetch(`${apiUrl}group/${groupId}/lists`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ listId }),
+        });
+
+        const body = await res.json().catch(() => null);
+
+        if (!res.ok) {
+            return {
+                success: false,
+                error: body?.error || `Erreur serveur (${res.status})`,
+            };
+        }
+
+        return { success: true, data: body };
+    } catch (e: any) {
+        console.error("Error adding list to group:", e);
+        return { success: false, error: e?.message || "Erreur de connexion" };
+    }
+}
+
+export async function removeListFromGroup(groupId: string, listId: string): Promise<boolean> {
+    try {
+        const cleanId = extractListId(listId);
+        const res = await fetch(`${apiUrl}group/${groupId}/lists/${cleanId}`, {
+            method: "DELETE",
+        });
+        return res.ok;
+    } catch (e) {
+        console.error("Error removing list from group:", e);
+        return false;
     }
 }
 

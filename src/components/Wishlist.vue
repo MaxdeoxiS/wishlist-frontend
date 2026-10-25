@@ -1,33 +1,48 @@
 <script setup lang="ts">
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
-import type { CreateWish, Wishlist, WishlistGroup } from '@/utils/types'
-import Wish from "@/components/Wish.vue"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import type { CreateWish, Wishlist, WishlistGroup } from '@/utils/types';
+import Wish from "@/components/Wish.vue";
 import ListHeader from './ListHeader.vue';
 import { computed, ref } from 'vue';
+import { useRouter } from 'vue-router';
 import Button from './ui/button/Button.vue';
-import { ChevronDown, Edit, Gift, Plus, Search, Share2, Sparkles, UserCheck } from 'lucide-vue-next';
+import { ChevronDown, Gift, Plus, Search, Share2, Sparkles, UserCheck, Users } from 'lucide-vue-next';
 import CreateWishModal from './modals/CreateWishModal.vue';
 import { useUserStore } from '@/utils/store';
 import TakeListOwnership from './modals/TakeListOwnership.vue';
-import { Breadcrumb, BreadcrumbItem, BreadcrumbLink, BreadcrumbList } from './ui/breadcrumb';
+import { Breadcrumb, BreadcrumbItem, BreadcrumbList } from './ui/breadcrumb';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from './ui/dropdown-menu';
 
-const store = useUserStore()
+const router = useRouter();
+const store = useUserStore();
 
-const props = defineProps<Omit<Wishlist, "id"> & { onBuy: (wishId: number, cancel: boolean) => void, onCreate: (wish: CreateWish) => void, share: () => void, onDelete: (wishId: number) => void, group?: WishlistGroup | null }>()
+const props = defineProps<Omit<Wishlist, "id"> & {
+    id?: string;
+    onBuy: (wishId: number, cancel: boolean) => void;
+    onCreate: (wish: CreateWish) => void;
+    share: () => void;
+    onDelete: (wishId: number) => void;
+    group?: WishlistGroup | null;
+}>();
 
-const filter = ref("")
-const filteredWishes = computed(() => props.wishes.filter(w => w.name.toLowerCase().includes(filter.value.toLowerCase())))
+const filter = ref("");
+const filteredWishes = computed(() => props.wishes.filter(w => w.name.toLowerCase().includes(filter.value.toLowerCase())));
 
-const totalCount = computed(() => props.wishes.length)
-const boughtCount = computed(() => props.wishes.filter(w => !!w.bought_by).length)
-const progressPercent = computed(() => totalCount.value > 0 ? Math.round((boughtCount.value / totalCount.value) * 100) : 0)
+const totalCount = computed(() => props.wishes.length);
+const boughtCount = computed(() => props.wishes.filter(w => !!w.bought_by).length);
 
-const addModalOpen = ref(false)
-const ownershipModalOpen = ref(false)
+const addModalOpen = ref(false);
+const ownershipModalOpen = ref(false);
 
-const isAuthor = computed(() => store.username === props.user)
+const isAuthor = computed(() => store.username === props.user);
 
+function navigateToGroup(groupId: string) {
+    router.push(`/group/${groupId}`);
+}
+
+function navigateToList(listId: string) {
+    router.push(`/list/${listId}`);
+}
 </script>
 
 <template>
@@ -39,22 +54,31 @@ const isAuthor = computed(() => store.username === props.user)
             <Breadcrumb v-if="group" class="mb-3 px-1">
                 <BreadcrumbList class="text-xs sm:text-sm">
                     <BreadcrumbItem>
-                        <BreadcrumbLink :href="`/group/${group.id}`" class="hover:text-primary transition-colors font-medium">
-                            {{ group?.title }}
-                        </BreadcrumbLink>
+                        <button
+                            type="button"
+                            @click="navigateToGroup(group.id)"
+                            class="hover:text-primary transition-colors font-medium flex items-center gap-1.5 text-muted-foreground hover:underline"
+                        >
+                            <Users class="w-3.5 h-3.5 text-primary" />
+                            <span>{{ group.title }}</span>
+                        </button>
                     </BreadcrumbItem>
                     <span class="text-muted-foreground/50">/</span>
                     <BreadcrumbItem>
-                        <DropdownMenu v-if="group.list.length > 1">
-                            <DropdownMenuTrigger class="flex items-center gap-1 font-semibold text-foreground">
-                                {{ props.title }}
-                                <ChevronDown class="w-3.5 h-3.5" />
+                        <DropdownMenu v-if="group.list && group.list.length > 1">
+                            <DropdownMenuTrigger class="flex items-center gap-1 font-semibold text-foreground hover:text-primary transition-colors">
+                                <span>{{ props.title }}</span>
+                                <ChevronDown class="w-3.5 h-3.5 opacity-60" />
                             </DropdownMenuTrigger>
-                            <DropdownMenuContent align="start" class="min-w-[180px]">
-                                <DropdownMenuItem v-for="list of group?.list" :key="list.id" class="p-2.5 text-sm cursor-pointer">
-                                    <a :href="`/list/${list.id}`" class="w-full">
-                                        {{ list.title }} {{ list.title.includes(list.user) ? "" : `(${list.user})` }}
-                                    </a>
+                            <DropdownMenuContent align="start" class="min-w-[200px] rounded-xl p-1.5 shadow-lg">
+                                <DropdownMenuItem
+                                    v-for="otherList of group.list"
+                                    :key="otherList.id"
+                                    class="p-2 text-xs rounded-lg cursor-pointer flex items-center justify-between"
+                                    @click="navigateToList(otherList.id)"
+                                >
+                                    <span class="font-medium truncate">{{ otherList.title }}</span>
+                                    <span class="text-[11px] text-muted-foreground ml-2 shrink-0">({{ otherList.user }})</span>
                                 </DropdownMenuItem>
                             </DropdownMenuContent>
                         </DropdownMenu>
