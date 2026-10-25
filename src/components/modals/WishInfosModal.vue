@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from '../ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
 import type { Wish } from '@/utils/types';
 import { Button } from '../ui/button';
-import { Gift, ExternalLink, CheckCircle2, MessageSquare, Trash2, Calendar, Sparkles } from 'lucide-vue-next';
-import { computed } from 'vue';
+import { Gift, ExternalLink, CheckCircle2, MessageSquare, Trash2, Calendar, Maximize2 } from 'lucide-vue-next';
+import { computed, ref } from 'vue';
+import ImageViewerModal from './ImageViewerModal.vue';
 
 const emit = defineEmits(['close', 'buy', 'delete'])
 
@@ -14,6 +15,8 @@ const props = defineProps<{
     onBuy: () => void;
     isAuthor: boolean;
 }>()
+
+const imageViewerOpen = ref(false)
 
 const formattedDomain = computed(() => {
     if (!props.wish.url) return null
@@ -66,9 +69,29 @@ const formattedDate = computed(() => {
 
             <!-- Scrollable Content -->
             <div class="overflow-y-auto flex-1 space-y-4 py-3 pr-1">
-                <!-- Large Image if available -->
-                <div v-if="wish.picture" class="w-full max-h-72 rounded-xl overflow-hidden border bg-muted/20 flex items-center justify-center">
-                    <img :src="wish.picture" :alt="wish.name" class="w-full h-full object-contain" />
+                <!-- Large Image if available (never cropped) -->
+                <div
+                    v-if="wish.picture"
+                    class="relative group/img w-full max-h-80 rounded-xl overflow-hidden border bg-muted/20 flex items-center justify-center cursor-pointer select-none"
+                    @click="imageViewerOpen = true"
+                    title="Cliquer pour afficher en plein écran"
+                >
+                    <img
+                        :src="wish.picture"
+                        :alt="wish.name"
+                        class="max-h-80 w-auto max-w-full object-contain transition-transform duration-200 group-hover/img:scale-[1.01]"
+                    />
+
+                    <!-- Fullscreen action badge -->
+                    <button
+                        type="button"
+                        class="absolute bottom-2.5 right-2.5 flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg bg-background/90 hover:bg-background text-foreground text-xs font-semibold shadow-md backdrop-blur border border-border/60 transition-all opacity-90 group-hover/img:opacity-100 group-hover/img:scale-105"
+                        title="Afficher en taille originale"
+                        @click.stop="imageViewerOpen = true"
+                    >
+                        <Maximize2 class="w-3.5 h-3.5 text-primary" />
+                        <span>Plein écran</span>
+                    </button>
                 </div>
 
                 <!-- Web link -->
@@ -159,4 +182,13 @@ const formattedDate = computed(() => {
             </DialogFooter>
         </DialogContent>
     </Dialog>
+
+    <!-- Fullscreen / Original Size Image Viewer -->
+    <ImageViewerModal
+        v-if="wish.picture"
+        :open="imageViewerOpen"
+        :src="wish.picture"
+        :title="wish.name"
+        @close="imageViewerOpen = false"
+    />
 </template>

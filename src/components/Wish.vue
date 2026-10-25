@@ -7,18 +7,21 @@ import {
     CheckCircle2,
     MessageSquare,
     ChevronRight,
+    Maximize2,
 } from 'lucide-vue-next'
 import { type Wish } from '@/utils/types'
 import { computed, ref } from 'vue';
 import BuyModal from './modals/BuyModal.vue';
 import { useUserStore } from '@/utils/store';
 import WishInfosModal from './modals/WishInfosModal.vue';
+import ImageViewerModal from './modals/ImageViewerModal.vue';
 import { cn } from '@/lib/utils'
 
 const props = defineProps<Wish & { onBuy: (wishId: number, cancel: boolean) => void; isAuthor: boolean; onDelete: (wishId: number) => void }>()
 
 const buyModalOpen = ref(false)
 const infosModalOpen = ref(false)
+const imageViewerOpen = ref(false)
 
 const store = useUserStore()
 
@@ -59,15 +62,29 @@ const formattedDomain = computed(() => {
     >
         <!-- Left: Thumbnail & Content -->
         <div class="flex items-center gap-2.5 sm:gap-3 flex-1 min-w-0">
-            <!-- Compact thumbnail (44px) -->
-            <div class="relative shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-lg overflow-hidden bg-muted/60 border flex items-center justify-center">
+            <!-- Compact thumbnail (44-48px) with fullscreen preview click -->
+            <div
+                :class="cn(
+                    'relative shrink-0 w-11 h-11 sm:w-12 sm:h-12 rounded-lg overflow-hidden bg-muted/60 border flex items-center justify-center group/thumb',
+                    props.picture && 'cursor-pointer hover:border-primary/50'
+                )"
+                :title="props.picture ? 'Afficher l\'image en plein écran' : undefined"
+                @click.stop="props.picture ? (imageViewerOpen = true) : undefined"
+            >
                 <img
                     v-if="props.picture"
                     :src="props.picture"
                     :alt="props.name"
-                    class="w-full h-full object-cover transition-transform duration-300 group-hover:scale-105"
+                    class="w-full h-full object-cover transition-transform duration-300 group-hover/thumb:scale-110"
                     loading="lazy"
                 />
+                <!-- Fullscreen overlay icon on thumbnail hover -->
+                <div
+                    v-if="props.picture"
+                    class="absolute inset-0 bg-black/45 opacity-0 group-hover/thumb:opacity-100 transition-opacity flex items-center justify-center text-white"
+                >
+                    <Maximize2 class="w-4 h-4 drop-shadow" />
+                </div>
                 <div v-else class="w-full h-full flex items-center justify-center bg-gradient-to-br from-primary/10 via-primary/5 to-muted">
                     <Gift class="w-5 h-5 text-primary/60" />
                 </div>
@@ -184,5 +201,12 @@ const formattedDomain = computed(() => {
         :is-reserved="isBuyer"
         @close="buyModalOpen = false"
         @validate="onBuyAction"
+    />
+    <ImageViewerModal
+        v-if="props.picture"
+        :open="imageViewerOpen"
+        :src="props.picture"
+        :title="props.name"
+        @close="imageViewerOpen = false"
     />
 </template>

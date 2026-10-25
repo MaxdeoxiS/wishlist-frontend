@@ -12,7 +12,8 @@ import { ref } from 'vue';
 import { uploadPicture } from '@/utils/api';
 import { compressImage } from '@/utils/image';
 import { toast } from 'vue-sonner';
-import { Loader2, Plus, Sparkles, UploadCloud, X, ImageIcon, LinkIcon } from 'lucide-vue-next'
+import { Loader2, Plus, Sparkles, UploadCloud, X, Maximize2 } from 'lucide-vue-next'
+import ImageViewerModal from './ImageViewerModal.vue';
 
 const MAX_FILE_SIZE = 5 * 1024 * 1024
 const ALLOWED_FILE_TYPES = ["image/jpeg", "image/png", "image/webp"]
@@ -23,6 +24,7 @@ const picture = ref<File | null>(null)
 const previewUrl = ref<string | null>(null)
 const pictureError = ref<string | null>(null)
 const loading = ref(false)
+const previewViewerOpen = ref(false)
 
 const formSchema = toTypedSchema(z.object({
     url: z.union([z.undefined(), z.string().trim().url({ message: "URL invalide (doit commencer par http:// ou https://)" })]),
@@ -196,12 +198,22 @@ const onSubmit = handleSubmit(async (values) => {
                 <div class="space-y-1.5">
                     <label class="text-xs font-semibold text-foreground">Photo du produit (facultatif)</label>
 
-                    <div v-if="previewUrl" class="relative w-full h-36 rounded-xl overflow-hidden border bg-muted/30 flex items-center justify-center group">
-                        <img :src="previewUrl" alt="Aperçu" class="w-full h-full object-contain" />
+                    <div
+                        v-if="previewUrl"
+                        class="relative w-full h-36 rounded-xl overflow-hidden border bg-muted/30 flex items-center justify-center group cursor-pointer"
+                        @click="previewViewerOpen = true"
+                        title="Cliquer pour voir en plein écran"
+                    >
+                        <img :src="previewUrl" alt="Aperçu" class="max-h-36 w-auto max-w-full object-contain" />
+                        <div class="absolute bottom-2 left-2 flex items-center gap-1 px-2 py-0.5 rounded-md bg-background/80 text-foreground text-[10px] font-medium backdrop-blur border shadow-sm opacity-80 group-hover:opacity-100 transition-opacity">
+                            <Maximize2 class="w-3 h-3 text-primary" />
+                            <span>Plein écran</span>
+                        </div>
                         <button
                             type="button"
-                            @click="removePicture"
+                            @click.stop="removePicture"
                             class="absolute top-2 right-2 p-1.5 rounded-full bg-background/80 hover:bg-destructive hover:text-white backdrop-blur shadow transition-colors"
+                            title="Supprimer la photo"
                         >
                             <X class="w-4 h-4" />
                         </button>
@@ -235,4 +247,13 @@ const onSubmit = handleSubmit(async (values) => {
             </DialogFooter>
         </DialogContent>
     </Dialog>
+
+    <!-- Fullscreen / Original Size Preview -->
+    <ImageViewerModal
+        v-if="previewUrl"
+        :open="previewViewerOpen"
+        :src="previewUrl"
+        title="Aperçu de la photo"
+        @close="previewViewerOpen = false"
+    />
 </template>
