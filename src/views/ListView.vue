@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import Wishlist from '@/components/Wishlist.vue';
 import ListHeader from '@/components/ListHeader.vue';
-import { addWish, deleteWish, getGroup, getList, setBought } from '@/utils/api';
+import { addWish, deleteWish, getGroup, getList, setBought, updateList } from '@/utils/api';
 import { useUserStore } from '@/utils/store';
 import type { CreateWish, Wish, Wishlist as WishlistData } from '@/utils/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
@@ -78,6 +78,20 @@ const deleteMutation = useMutation({
   onSuccess: () => {
     queryClient.invalidateQueries({ queryKey: ['wishlist'] })
     toast.info('Souhait supprimé de la liste')
+  },
+})
+
+const updateTitleMutation = useMutation({
+  mutationFn: (newTitle: string) => updateList(id as string, { title: newTitle }),
+  onSuccess: (updated) => {
+    if (updated) {
+      queryClient.invalidateQueries({ queryKey: ['wishlist', id] })
+      queryClient.invalidateQueries({ queryKey: ['group'] })
+      toast.success('Nom de la liste mis à jour ! ✨')
+    }
+  },
+  onError: () => {
+    toast.error('Impossible de modifier le nom de la liste')
   },
 })
 
@@ -166,6 +180,7 @@ async function share() {
   <!-- Loaded Wishlist -->
   <Wishlist
     v-else
+    :id="id as string"
     :title="data.title"
     :user="data.user"
     :wishes="data?.wishes || []"
@@ -174,6 +189,7 @@ async function share() {
     @buy="(wishId, cancel) => mutation.mutate({ wishId, cancel })"
     @create="onAddWish"
     @delete="id => deleteMutation.mutate(id)"
+    @update-title="title => updateTitleMutation.mutate(title)"
     :share="share"
   />
 </template>

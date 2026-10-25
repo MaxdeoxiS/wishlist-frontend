@@ -89,6 +89,25 @@ export async function updateGroup(id: string, data: { title: string }): Promise<
     }
 }
 
+export async function updateList(id: string, data: { title: string }): Promise<Wishlist | null> {
+    try {
+        const res = await fetch(`${baseUrl}/${id}`, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(data),
+        });
+
+        if (!res.ok) {
+            return null;
+        }
+
+        return await res.json();
+    } catch (e) {
+        console.error("Error updating list:", e);
+        return null;
+    }
+}
+
 export async function addListToGroup(groupId: string, urlOrId: string): Promise<{ success: boolean; data?: Wishlist; error?: string }> {
     try {
         const listId = extractListId(urlOrId);

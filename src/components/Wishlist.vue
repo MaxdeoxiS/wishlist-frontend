@@ -6,7 +6,9 @@ import ListHeader from './ListHeader.vue';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import Button from './ui/button/Button.vue';
-import { ChevronDown, Gift, Plus, Search, Share2, Sparkles, UserCheck, Users } from 'lucide-vue-next';
+import { ChevronDown, Gift, Plus, Search, Share2, Sparkles, UserCheck, Users, Pencil, Loader2 } from 'lucide-vue-next';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
+import { Input } from './ui/input';
 import CreateWishModal from './modals/CreateWishModal.vue';
 import { useUserStore } from '@/utils/store';
 import TakeListOwnership from './modals/TakeListOwnership.vue';
@@ -22,8 +24,34 @@ const props = defineProps<Omit<Wishlist, "id"> & {
     onCreate: (wish: CreateWish) => void;
     share: () => void;
     onDelete: (wishId: number) => void;
+    onUpdateTitle?: (title: string) => void;
     group?: WishlistGroup | null;
 }>();
+
+const editTitleModalOpen = ref(false);
+const newTitle = ref('');
+const isSavingTitle = ref(false);
+
+function openEditTitleModal() {
+    newTitle.value = props.title;
+    editTitleModalOpen.value = true;
+}
+
+async function saveNewTitle() {
+    const trimmed = newTitle.value.trim();
+    if (!trimmed || trimmed === props.title) {
+        editTitleModalOpen.value = false;
+        return;
+    }
+
+    isSavingTitle.value = true;
+    try {
+        props.onUpdateTitle?.(trimmed);
+        editTitleModalOpen.value = false;
+    } finally {
+        isSavingTitle.value = false;
+    }
+}
 
 const filter = ref("");
 const filteredWishes = computed(() => props.wishes.filter(w => w.name.toLowerCase().includes(filter.value.toLowerCase())));
@@ -94,10 +122,19 @@ function navigateToList(listId: string) {
                     <CardHeader class="p-4 sm:p-6 pb-3 border-b border-border/40">
                         <div class="flex items-start justify-between gap-3">
                             <div>
-                                <div class="flex items-center gap-2 mb-1">
+                                <div class="flex items-center gap-2 mb-1 flex-wrap">
                                     <CardTitle class="text-xl sm:text-2xl font-extrabold tracking-tight">
                                         {{ props.title }}
                                     </CardTitle>
+                                    <Button
+                                        variant="ghost"
+                                        size="icon"
+                                        class="w-7 h-7 rounded-lg text-muted-foreground hover:text-foreground"
+                                        title="Modifier le nom de la liste"
+                                        @click="openEditTitleModal"
+                                    >
+                                        <Pencil class="w-3.5 h-3.5" />
+                                    </Button>
                                     <span v-if="isAuthor" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold bg-primary/10 text-primary border border-primary/20">
                                         <Sparkles class="w-3 h-3" /> Ma liste
                                     </span>
@@ -224,4 +261,38 @@ function navigateToList(listId: string) {
     <!-- Modals -->
     <CreateWishModal :open="addModalOpen" @close="addModalOpen = false" :add="props.onCreate" />
     <TakeListOwnership :open="ownershipModalOpen" @close="ownershipModalOpen = false" :list-owner="props.user" />
+
+    <!-- Edit List Title Modal -->
+    <Dialog :open="editTitleModalOpen" @update:open="editTitleModalOpen = false">
+        <DialogContent class="sm:max-w-[420px] rounded-2xl p-6">
+            <DialogHeader class="text-left space-y-1">
+                <DialogTitle class="text-lg font-bold">Modifier le nom de la liste</DialogTitle>
+                <DialogDescription class="text-xs text-muted-foreground">
+                    Modifiez le titre affiché pour cette liste de souhaits.
+                </DialogDescription>
+            </DialogHeader>
+
+            <div class="space-y-3 my-2">
+                <Input
+                    v-model="newTitle"
+                    type="text"
+                    placeholder="Nom de la liste"
+                    class="h-11 rounded-xl"
+                    maxlength="100"
+                    autofocus
+                    @keydown.enter.prevent="saveNewTitle"
+                />
+            </div>
+
+            <DialogFooter class="flex-col-reverse sm:flex-row gap-2 mt-2">
+                <Button variant="outline" class="rounded-xl h-10" @click="editTitleModalOpen = false" :disabled="isSavingTitle">
+                    Annuler
+                </Button>
+                <Button class="rounded-xl h-10 font-semibold" @click="saveNewTitle" :disabled="!newTitle.trim() || isSavingTitle">
+                    <Loader2 v-if="isSavingTitle" class="w-4 h-4 mr-2 animate-spin" />
+                    Enregistrer
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
 </template>

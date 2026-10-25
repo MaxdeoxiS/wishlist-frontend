@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { addListToGroup, createlist, getGroup, removeListFromGroup, updateGroup } from '@/utils/api';
+import { addListToGroup, createlist, getGroup, removeListFromGroup, updateGroup, updateList } from '@/utils/api';
 import type { CreateList } from '@/utils/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { useRoute, useRouter } from 'vue-router';
@@ -20,7 +20,8 @@ import {
     Pencil,
     Gift,
     Link2,
-    Calendar
+    Calendar,
+    Loader2
 } from 'lucide-vue-next';
 import {
     DropdownMenu,
@@ -60,13 +61,13 @@ watch(data, (newGroup) => {
 });
 
 const addModalOpen = ref(false);
-const defaultModalMode = ref<'existing' | 'new'>('existing');
+const defaultModalMode = ref<'existing' | 'new'>('new');
 
 const existingListIds = computed(() => {
     return data.value?.list?.map((l) => l.id) || [];
 });
 
-function openAddModal(mode: 'existing' | 'new' = 'existing') {
+function openAddModal(mode: 'existing' | 'new' = 'new') {
     defaultModalMode.value = mode;
     addModalOpen.value = true;
 }
@@ -160,6 +161,42 @@ function saveNewTitle() {
         return;
     }
     updateMutation.mutate(trimmed);
+}
+
+// List Rename Dialog
+const editListTitleModalOpen = ref(false);
+const selectedListForRename = ref<{ id: string; title: string } | null>(null);
+const newListTitle = ref('');
+
+function openEditListTitleModal(list: { id: string; title: string }) {
+    selectedListForRename.value = list;
+    newListTitle.value = list.title;
+    editListTitleModalOpen.value = true;
+}
+
+const updateListTitleMutation = useMutation({
+    mutationFn: ({ listId, title }: { listId: string; title: string }) => updateList(listId, { title }),
+    onSuccess: (updated) => {
+        if (updated) {
+            queryClient.invalidateQueries({ queryKey: ['group', id.value] });
+            editListTitleModalOpen.value = false;
+            toast.success("Nom de la liste mis à jour !");
+        }
+    },
+    onError: () => {
+        toast.error("Impossible de renommer la liste.");
+    },
+});
+
+function saveNewListTitle() {
+    if (!selectedListForRename.value) return;
+    const trimmed = newListTitle.value.trim();
+    if (!trimmed) return;
+    if (trimmed === selectedListForRename.value.title) {
+        editListTitleModalOpen.value = false;
+        return;
+    }
+    updateListTitleMutation.mutate({ listId: selectedListForRename.value.id, title: trimmed });
 }
 
 // Share group link
@@ -275,7 +312,7 @@ async function share() {
                                 <Button variant="outline" size="sm" class="rounded-full px-4 gap-1.5" @click="share">
                                     <Share2 class="w-3.5 h-3.5" /> Partager le groupe
                                 </Button>
-                                <Button size="sm" class="rounded-full px-4 gap-1.5 shadow-sm" @click="openAddModal('existing')">
+                                <Button size="sm" class="rounded-full px-4 gap-1.5 shadow-sm" @click="openAddModal('new')">
                                     <Plus class="w-3.5 h-3.5" /> Ajouter une liste
                                 </Button>
                             </div>
@@ -295,15 +332,15 @@ async function share() {
                             <div class="max-w-sm space-y-1">
                                 <h3 class="font-bold text-base text-foreground">Aucune liste pour le moment</h3>
                                 <p class="text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                                    Cet événement est prêt ! Vous pouvez y rattacher une liste de souhaits existante par URL ou en créer une toute nouvelle.
+                                    Cet événement est prêt ! Créez une première liste pour commencer à partager vos idées de cadeaux.
                                 </p>
                             </div>
                             <div class="flex flex-col sm:flex-row items-center gap-2 pt-2">
                                 <Button class="rounded-full px-5 text-xs font-semibold gap-2 shadow-sm" @click="openAddModal('new')">
                                     <Plus class="w-4 h-4" /> Créer une nouvelle liste
                                 </Button>
-                                <Button variant="outline" class="rounded-full px-5 text-xs font-semibold gap-2" @click="openAddModal('existing')">
-                                    <Link2 class="w-4 h-4" /> Ajouter par URL
+                                <Button variant="ghost" class="rounded-full px-4 text-xs text-muted-foreground hover:text-foreground gap-1.5" @click="openAddModal('existing')">
+                                    <Link2 class="w-3.5 h-3.5" /> Rattacher par URL
                                 </Button>
                             </div>
                         </div>
@@ -321,9 +358,20 @@ async function share() {
                                     {{ list.user?.charAt(0).toUpperCase() || '?' }}
                                 </div>
                                 <div class="min-w-0 space-y-0.5">
-                                    <h3 class="font-bold text-sm sm:text-base text-foreground tracking-tight truncate group-hover:text-primary transition-colors">
-                                        {{ list.title }}
-                                    </h3>
+                                    <div class="flex items-center gap-1.5 min-w-0">
+                                        <h3 class="font-bold text-sm sm:text-base text-foreground tracking-tight truncate group-hover:text-primary transition-colors">
+                                            {{ list.title }}
+                                        </h3>
+                                        <Button
+                                            variant="ghost"
+                                            size="icon"
+                                            class="w-6 h-6 rounded-md text-muted-foreground/60 hover:text-foreground opacity-70 sm:opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                            title="Modifier le nom de la liste"
+                                            @click.stop="openEditListTitleModal(list)"
+                                        >
+                                            <Pencil class="w-3 h-3" />
+                                        </Button>
+                                    </div>
                                     <div class="flex items-center gap-2 text-xs text-muted-foreground">
                                         <span class="truncate">
                                             Par <strong class="text-foreground font-medium">{{ list.user }}</strong>
@@ -366,6 +414,10 @@ async function share() {
                                             <Copy class="w-3.5 h-3.5" />
                                             <span>Copier le lien</span>
                                         </DropdownMenuItem>
+                                        <DropdownMenuItem class="rounded-lg text-xs gap-2 cursor-pointer" @click="openEditListTitleModal(list)">
+                                            <Pencil class="w-3.5 h-3.5" />
+                                            <span>Modifier le nom</span>
+                                        </DropdownMenuItem>
                                         <DropdownMenuSeparator />
                                         <DropdownMenuItem
                                             class="rounded-lg text-xs gap-2 text-destructive focus:text-destructive cursor-pointer"
@@ -392,7 +444,7 @@ async function share() {
                             <Button variant="outline" class="rounded-full px-4 gap-2 text-xs" @click="share">
                                 <Share2 class="w-3.5 h-3.5" /> Partager
                             </Button>
-                            <Button class="rounded-full px-5 shadow-sm gap-2 text-xs font-semibold" @click="openAddModal('existing')">
+                            <Button class="rounded-full px-5 shadow-sm gap-2 text-xs font-semibold" @click="openAddModal('new')">
                                 <Plus class="w-4 h-4" /> Ajouter une liste
                             </Button>
                         </div>
@@ -415,7 +467,7 @@ async function share() {
 
                 <Button
                     class="flex-1 rounded-full h-11 font-bold shadow-md gap-2"
-                    @click="openAddModal('existing')"
+                    @click="openAddModal('new')"
                 >
                     <Plus class="w-5 h-5" />
                     <span>Ajouter une liste</span>
@@ -462,6 +514,40 @@ async function share() {
                     Annuler
                 </Button>
                 <Button class="rounded-xl h-10 font-semibold" @click="saveNewTitle" :disabled="!newTitle.trim()">
+                    Enregistrer
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
+    <!-- Edit List Title Modal -->
+    <Dialog :open="editListTitleModalOpen" @update:open="editListTitleModalOpen = false">
+        <DialogContent class="sm:max-w-[400px] rounded-2xl p-6">
+            <DialogHeader class="text-left space-y-1">
+                <DialogTitle class="text-lg font-bold">Modifier le nom de la liste</DialogTitle>
+                <DialogDescription class="text-xs text-muted-foreground">
+                    Modifiez le titre de cette liste de souhaits.
+                </DialogDescription>
+            </DialogHeader>
+
+            <div class="space-y-3 my-2">
+                <Input
+                    v-model="newListTitle"
+                    type="text"
+                    placeholder="Nom de la liste"
+                    class="h-11 rounded-xl"
+                    maxlength="100"
+                    autofocus
+                    @keydown.enter.prevent="saveNewListTitle"
+                />
+            </div>
+
+            <DialogFooter class="flex-col-reverse sm:flex-row gap-2 mt-2">
+                <Button variant="outline" class="rounded-xl h-10" @click="editListTitleModalOpen = false">
+                    Annuler
+                </Button>
+                <Button class="rounded-xl h-10 font-semibold" @click="saveNewListTitle" :disabled="!newListTitle.trim() || updateListTitleMutation.isPending.value">
+                    <Loader2 v-if="updateListTitleMutation.isPending.value" class="w-4 h-4 mr-2 animate-spin" />
                     Enregistrer
                 </Button>
             </DialogFooter>

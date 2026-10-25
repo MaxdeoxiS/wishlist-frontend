@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useForm } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/zod';
 import * as z from 'zod';
@@ -18,7 +18,7 @@ import { useUserStore } from '@/utils/store';
 import { getLists } from '@/utils/storage';
 import { extractListId } from '@/utils/api';
 import type { CreateList } from '@/utils/types';
-import { Loader2, Link2, PlusCircle, Sparkles, CheckCircle2 } from 'lucide-vue-next';
+import { Loader2, Link2, PlusCircle, Sparkles } from 'lucide-vue-next';
 
 const props = withDefaults(
     defineProps<{
@@ -30,7 +30,7 @@ const props = withDefaults(
         existingListIds?: string[];
     }>(),
     {
-        defaultMode: 'existing',
+        defaultMode: 'new',
         existingListIds: () => [],
     }
 );
@@ -38,6 +38,10 @@ const props = withDefaults(
 const mode = ref<'existing' | 'new'>(props.defaultMode);
 const loading = ref(false);
 const store = useUserStore();
+
+watch(() => props.defaultMode, (newVal) => {
+    mode.value = newVal;
+});
 
 // --- Form for Existing List ---
 const existingUrlOrId = ref('');
@@ -100,6 +104,20 @@ const { handleSubmit, resetForm } = useForm({
     },
 });
 
+watch(() => props.open, (isOpen) => {
+    if (isOpen) {
+        mode.value = props.defaultMode;
+        existingUrlOrId.value = '';
+        existingError.value = '';
+        resetForm({
+            values: {
+                username: store.username || '',
+                title: '',
+            },
+        });
+    }
+});
+
 const onSubmitNew = handleSubmit(async (values) => {
     loading.value = true;
     try {
@@ -124,34 +142,93 @@ const onSubmitNew = handleSubmit(async (values) => {
             <DialogHeader class="text-left space-y-1">
                 <DialogTitle class="text-xl font-bold">Ajouter une liste au groupe</DialogTitle>
                 <DialogDescription class="text-xs sm:text-sm text-muted-foreground">
-                    Vous pouvez rattacher une liste déjà créée avec son lien, ou en créer une nouvelle directement.
+                    Créez une nouvelle liste pour cet événement ou rattachez une liste existante.
                 </DialogDescription>
             </DialogHeader>
 
             <!-- Mode Selector / Segmented Tabs -->
-            <div class="grid grid-cols-2 p-1 bg-muted rounded-xl text-xs font-semibold mt-3 mb-2">
+            <div class="flex items-center gap-1.5 p-1 bg-muted/50 rounded-xl text-xs mt-3 mb-2">
                 <button
                     type="button"
-                    class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg transition-all"
-                    :class="mode === 'existing' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'"
-                    @click="mode = 'existing'"
+                    class="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg transition-all"
+                    :class="mode === 'new' ? 'bg-background text-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground font-medium'"
+                    @click="mode = 'new'"
                 >
-                    <Link2 class="w-3.5 h-3.5" />
-                    <span>Liste existante (URL)</span>
+                    <PlusCircle class="w-3.5 h-3.5" :class="mode === 'new' ? 'text-primary' : ''" />
+                    <span>Nouvelle liste</span>
                 </button>
                 <button
                     type="button"
                     class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg transition-all"
-                    :class="mode === 'new' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'"
-                    @click="mode = 'new'"
+                    :class="mode === 'existing' ? 'bg-background text-foreground font-medium shadow-sm' : 'text-muted-foreground/60 hover:text-muted-foreground font-normal'"
+                    @click="mode = 'existing'"
+                    title="Rattacher une liste existante via son URL"
                 >
-                    <PlusCircle class="w-3.5 h-3.5" />
-                    <span>Nouvelle liste</span>
+                    <Link2 class="w-3 h-3 opacity-60" />
+                    <span class="text-[11px]">Par URL</span>
                 </button>
             </div>
 
-            <!-- Mode 1: Existing List via URL/ID -->
-            <div v-if="mode === 'existing'" class="space-y-4 py-1">
+            <!-- Mode 1: Create Brand New List in Group (Primary / Default) -->
+            <form v-if="mode === 'new'" @submit="onSubmitNew" class="space-y-4 py-1">
+                <FormField v-slot="{ componentField }" name="username">
+                    <FormItem>
+                        <FormLabel class="text-xs font-semibold">Prénom ou pseudo de la personne *</FormLabel>
+                        <FormControl>
+                            <Input
+                                type="text"
+                                placeholder="ex: Lucas, Maman, Thomas..."
+                                class="h-11 rounded-xl"
+                                maxlength="20"
+                                autofocus
+                                v-bind="componentField"
+                            />
+                        </FormControl>
+                        <FormMessage />
+                    </FormItem>
+                </FormField>
+
+                <FormField v-slot="{ componentField }" name="title">
+                    <FormItem>
+                        <FormLabel class="text-xs font-semibold">Titre de la liste (facultatif)</FormLabel>
+                        <FormControl>
+                            <Input
+                                type="text"
+                                placeholder="ex: Liste de Lucas pour Noël"
+                                class="h-11 rounded-xl"
+                                maxlength="100"
+                                v-bind="componentField"
+                            />
+                        </FormControl>
+                        <p class="text-[11px] text-muted-foreground">
+                            Par défaut : « Liste de souhaits de [Prénom] »
+                        </p>
+                    </FormItem>
+                </FormField>
+
+                <div class="text-center pt-1">
+                    <button
+                        type="button"
+                        class="text-[11px] text-muted-foreground/60 hover:text-muted-foreground hover:underline transition-colors"
+                        @click="mode = 'existing'"
+                    >
+                        Vous avez déjà une liste créée ? La rattacher par son lien
+                    </button>
+                </div>
+
+                <DialogFooter class="flex-col-reverse sm:flex-row gap-2 pt-2">
+                    <Button variant="outline" class="rounded-xl h-11" @click="onClose" :disabled="loading">
+                        Annuler
+                    </Button>
+                    <Button class="rounded-xl h-11 font-semibold shadow-sm" @click="onSubmitNew" :disabled="loading">
+                        <Loader2 v-if="loading" class="w-4 h-4 mr-2 animate-spin" />
+                        Créer et ajouter
+                    </Button>
+                </DialogFooter>
+            </form>
+
+            <!-- Mode 2: Existing List via URL/ID (Secondary) -->
+            <div v-else class="space-y-4 py-1">
                 <div class="space-y-2">
                     <label class="text-xs font-semibold text-foreground">
                         Lien ou identifiant de la liste *
@@ -194,6 +271,16 @@ const onSubmitNew = handleSubmit(async (values) => {
                     </div>
                 </div>
 
+                <div class="text-center pt-1">
+                    <button
+                        type="button"
+                        class="text-[11px] text-muted-foreground/70 hover:text-foreground hover:underline transition-colors"
+                        @click="mode = 'new'"
+                    >
+                        ← Revenir à la création d'une nouvelle liste
+                    </button>
+                </div>
+
                 <DialogFooter class="flex-col-reverse sm:flex-row gap-2 pt-2">
                     <Button variant="outline" class="rounded-xl h-11" @click="onClose" :disabled="loading">
                         Annuler
@@ -208,54 +295,6 @@ const onSubmitNew = handleSubmit(async (values) => {
                     </Button>
                 </DialogFooter>
             </div>
-
-            <!-- Mode 2: Create Brand New List in Group -->
-            <form v-else @submit="onSubmitNew" class="space-y-4 py-1">
-                <FormField v-slot="{ componentField }" name="username">
-                    <FormItem>
-                        <FormLabel class="text-xs font-semibold">Prénom ou pseudo de la personne *</FormLabel>
-                        <FormControl>
-                            <Input
-                                type="text"
-                                placeholder="ex: Lucas, Maman, Thomas..."
-                                class="h-11 rounded-xl"
-                                maxlength="20"
-                                autofocus
-                                v-bind="componentField"
-                            />
-                        </FormControl>
-                        <FormMessage />
-                    </FormItem>
-                </FormField>
-
-                <FormField v-slot="{ componentField }" name="title">
-                    <FormItem>
-                        <FormLabel class="text-xs font-semibold">Titre de la liste (facultatif)</FormLabel>
-                        <FormControl>
-                            <Input
-                                type="text"
-                                placeholder="ex: Liste de Lucas pour Noël"
-                                class="h-11 rounded-xl"
-                                maxlength="100"
-                                v-bind="componentField"
-                            />
-                        </FormControl>
-                        <p class="text-[11px] text-muted-foreground">
-                            Par défaut : « Liste de souhaits de [Prénom] »
-                        </p>
-                    </FormItem>
-                </FormField>
-
-                <DialogFooter class="flex-col-reverse sm:flex-row gap-2 pt-2">
-                    <Button variant="outline" class="rounded-xl h-11" @click="onClose" :disabled="loading">
-                        Annuler
-                    </Button>
-                    <Button class="rounded-xl h-11 font-semibold shadow-sm" @click="onSubmitNew" :disabled="loading">
-                        <Loader2 v-if="loading" class="w-4 h-4 mr-2 animate-spin" />
-                        Créer et ajouter
-                    </Button>
-                </DialogFooter>
-            </form>
         </DialogContent>
     </Dialog>
 </template>
