@@ -28,16 +28,20 @@ const props = defineProps<Omit<Wishlist, "id"> & {
     group?: WishlistGroup | null;
 }>();
 
+const isAuthor = computed(() => store.username === props.user);
+
 const editTitleModalOpen = ref(false);
 const newTitle = ref('');
 const isSavingTitle = ref(false);
 
 function openEditTitleModal() {
+    if (!isAuthor.value) return;
     newTitle.value = props.title;
     editTitleModalOpen.value = true;
 }
 
 async function saveNewTitle() {
+    if (!isAuthor.value) return;
     const trimmed = newTitle.value.trim();
     if (!trimmed || trimmed === props.title) {
         editTitleModalOpen.value = false;
@@ -61,8 +65,6 @@ const boughtCount = computed(() => props.wishes.filter(w => !!w.bought_by).lengt
 
 const addModalOpen = ref(false);
 const ownershipModalOpen = ref(false);
-
-const isAuthor = computed(() => store.username === props.user);
 
 function navigateToGroup(groupId: string) {
     router.push(`/group/${groupId}`);
@@ -127,10 +129,11 @@ function navigateToList(listId: string) {
                                         {{ props.title }}
                                     </CardTitle>
                                     <Button
+                                        v-if="isAuthor"
                                         variant="ghost"
                                         size="icon"
                                         class="w-7 h-7 rounded-lg text-muted-foreground hover:text-foreground"
-                                        title="Modifier le nom de la liste"
+                                        title="Modifier le nom de ma liste"
                                         @click="openEditTitleModal"
                                     >
                                         <Pencil class="w-3.5 h-3.5" />

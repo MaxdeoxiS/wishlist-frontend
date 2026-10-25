@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { addListToGroup, createlist, getGroup, removeListFromGroup, updateGroup, updateList } from '@/utils/api';
+import { addListToGroup, createlist, getGroup, removeListFromGroup, updateList } from '@/utils/api';
 import type { CreateList } from '@/utils/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { useRoute, useRouter } from 'vue-router';
@@ -41,12 +41,16 @@ import {
 import { Input } from '@/components/ui/input';
 import AddListToGroupModal from '@/components/modals/AddListToGroupModal.vue';
 import { saveRecentGroup } from '@/utils/storage';
+import { useUserStore } from '@/utils/store';
 import { toast } from 'vue-sonner';
 
 const route = useRoute();
 const router = useRouter();
 const id = computed(() => route.params.id as string);
 const queryClient = useQueryClient();
+const store = useUserStore();
+
+const isMyList = (list: { user?: string }) => !!store.username && list.user === store.username;
 
 const { data, isLoading, isError } = useQuery({
     queryKey: ['group', id],
@@ -130,45 +134,16 @@ async function copyListUrl(listId: string) {
     }
 }
 
-// Group Rename Dialog
-const editTitleModalOpen = ref(false);
-const newTitle = ref('');
-
-function openEditTitleModal() {
-    newTitle.value = data.value?.title || '';
-    editTitleModalOpen.value = true;
-}
-
-const updateMutation = useMutation({
-    mutationFn: (title: string) => updateGroup(id.value, { title }),
-    onSuccess: (updated) => {
-        if (updated) {
-            queryClient.invalidateQueries({ queryKey: ['group', id.value] });
-            saveRecentGroup({ id: updated.id, title: updated.title });
-            editTitleModalOpen.value = false;
-            toast.success("Nom de l'événement mis à jour !");
-        }
-    },
-    onError: () => {
-        toast.error('Impossible de renommer le groupe.');
-    },
-});
-
-function saveNewTitle() {
-    const trimmed = newTitle.value.trim();
-    if (trimmed.length < 2) {
-        toast.error('Le nom est trop court (2 caractères minimum).');
-        return;
-    }
-    updateMutation.mutate(trimmed);
-}
-
-// List Rename Dialog
+// List Rename Dialog (Only for user's own list)
 const editListTitleModalOpen = ref(false);
-const selectedListForRename = ref<{ id: string; title: string } | null>(null);
+const selectedListForRename = ref<{ id: string; title: string; user?: string } | null>(null);
 const newListTitle = ref('');
 
-function openEditListTitleModal(list: { id: string; title: string }) {
+function openEditListTitleModal(list: { id: string; title: string; user?: string }) {
+    if (!isMyList(list)) {
+        toast.error("Vous ne pouvez modifier que votre propre liste.");
+        return;
+    }
     selectedListForRename.value = list;
     newListTitle.value = list.title;
     editListTitleModalOpen.value = true;
@@ -189,7 +164,7 @@ const updateListTitleMutation = useMutation({
 });
 
 function saveNewListTitle() {
-    if (!selectedListForRename.value) return;
+    if (!selectedListForRename.value || !isMyList(selectedListForRename.value)) return;
     const trimmed = newListTitle.value.trim();
     if (!trimmed) return;
     if (trimmed === selectedListForRename.value.title) {
@@ -280,20 +255,9 @@ async function share() {
                                     <Users class="w-5 h-5" />
                                 </div>
                                 <div>
-                                    <div class="flex items-center gap-2 flex-wrap">
-                                        <CardTitle class="text-xl sm:text-2xl font-extrabold tracking-tight">
-                                            {{ data.title }}
-                                        </CardTitle>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            class="w-7 h-7 rounded-lg text-muted-foreground hover:text-foreground"
-                                            title="Renommer l'événement"
-                                            @click="openEditTitleModal"
-                                        >
-                                            <Pencil class="w-3.5 h-3.5" />
-                                        </Button>
-                                    </div>
+                                    <CardTitle class="text-xl sm:text-2xl font-extrabold tracking-tight">
+                                        {{ data.title }}
+                                    </CardTitle>
                                     <CardDescription class="text-xs sm:text-sm text-muted-foreground mt-0.5 flex items-center gap-2">
                                         <span>
                                             {{ data.list?.length || 0 }}
@@ -363,10 +327,11 @@ async function share() {
                                             {{ list.title }}
                                         </h3>
                                         <Button
+                                            v-if="isMyList(list)"
                                             variant="ghost"
                                             size="icon"
                                             class="w-6 h-6 rounded-md text-muted-foreground/60 hover:text-foreground opacity-70 sm:opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                                            title="Modifier le nom de la liste"
+                                            title="Modifier le nom de ma liste"
                                             @click.stop="openEditListTitleModal(list)"
                                         >
                                             <Pencil class="w-3 h-3" />
@@ -414,7 +379,11 @@ async function share() {
                                             <Copy class="w-3.5 h-3.5" />
                                             <span>Copier le lien</span>
                                         </DropdownMenuItem>
-                                        <DropdownMenuItem class="rounded-lg text-xs gap-2 cursor-pointer" @click="openEditListTitleModal(list)">
+                                        <DropdownMenuItem
+                                            v-if="isMyList(list)"
+                                            class="rounded-lg text-xs gap-2 cursor-pointer"
+                                            @click="openEditListTitleModal(list)"
+                                        >
                                             <Pencil class="w-3.5 h-3.5" />
                                             <span>Modifier le nom</span>
                                         </DropdownMenuItem>
@@ -486,39 +455,6 @@ async function share() {
         :create-new="handleCreateNew"
         @close="addModalOpen = false"
     />
-
-    <!-- Edit Group Title Modal -->
-    <Dialog :open="editTitleModalOpen" @update:open="editTitleModalOpen = false">
-        <DialogContent class="sm:max-w-[400px] rounded-2xl p-6">
-            <DialogHeader class="text-left space-y-1">
-                <DialogTitle class="text-lg font-bold">Modifier le nom de l'événement</DialogTitle>
-                <DialogDescription class="text-xs text-muted-foreground">
-                    Modifiez le titre affiché pour ce groupe de listes.
-                </DialogDescription>
-            </DialogHeader>
-
-            <div class="space-y-3 my-2">
-                <Input
-                    v-model="newTitle"
-                    type="text"
-                    placeholder="Nom du groupe"
-                    class="h-11 rounded-xl"
-                    maxlength="80"
-                    autofocus
-                    @keydown.enter.prevent="saveNewTitle"
-                />
-            </div>
-
-            <DialogFooter class="flex-col-reverse sm:flex-row gap-2 mt-2">
-                <Button variant="outline" class="rounded-xl h-10" @click="editTitleModalOpen = false">
-                    Annuler
-                </Button>
-                <Button class="rounded-xl h-10 font-semibold" @click="saveNewTitle" :disabled="!newTitle.trim()">
-                    Enregistrer
-                </Button>
-            </DialogFooter>
-        </DialogContent>
-    </Dialog>
 
     <!-- Edit List Title Modal -->
     <Dialog :open="editListTitleModalOpen" @update:open="editListTitleModalOpen = false">
