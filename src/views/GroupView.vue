@@ -12,6 +12,7 @@ import {
     Share2,
     Users,
     ChevronRight,
+    ChevronDown,
     ArrowLeft,
     AlertCircle,
     Copy,
@@ -24,6 +25,7 @@ import {
     CheckCircle2,
     ClipboardCheck,
     Lock,
+    Sparkles,
     X
 } from 'lucide-vue-next';
 import {
@@ -47,6 +49,8 @@ import {
     saveRecentGroup,
     getPersonalChecklist,
     savePersonalChecklist,
+    getRemovedChecklistNames,
+    addRemovedChecklistName,
     type PersonalChecklistItem
 } from '@/utils/storage';
 import { useUserStore } from '@/utils/store';
@@ -79,6 +83,10 @@ const { data, isLoading, isError } = useQuery({
 const sortedLists = computed(() => {
     const lists = data.value?.list ? [...data.value.list] : [];
     return lists.sort((a, b) => {
+        const myA = isMyList(a) ? -1 : 0;
+        const myB = isMyList(b) ? -1 : 0;
+        if (myA !== myB) return myA - myB;
+
         const boughtA = hasBoughtInList(a) ? 1 : 0;
         const boughtB = hasBoughtInList(b) ? 1 : 0;
         return boughtA - boughtB;
@@ -89,12 +97,39 @@ const sortedLists = computed(() => {
 const personalChecklist = ref<PersonalChecklistItem[]>([]);
 const newChecklistPerson = ref('');
 
-watch(
-    id,
-    (newGroupId) => {
-        if (newGroupId) {
-            personalChecklist.value = getPersonalChecklist(newGroupId);
+function syncChecklistWithGroup() {
+    if (!id.value) return;
+    const saved = getPersonalChecklist(id.value) || [];
+    const removed = getRemovedChecklistNames(id.value);
+    const groupLists = data.value?.list || [];
+
+    const existingNames = new Set(saved.map((item) => item.name.trim().toLowerCase()));
+    let changed = false;
+
+    for (const l of groupLists) {
+        if (!l.user || isMyList(l)) continue;
+        const norm = l.user.trim().toLowerCase();
+        if (!existingNames.has(norm) && !removed.includes(norm)) {
+            saved.push({
+                id: `group-${l.id}`,
+                name: l.user.trim(),
+                checked: hasBoughtInList(l),
+            });
+            existingNames.add(norm);
+            changed = true;
         }
+    }
+
+    personalChecklist.value = saved;
+    if (changed) {
+        savePersonalChecklist(id.value, saved);
+    }
+}
+
+watch(
+    [id, data, () => store.username],
+    () => {
+        syncChecklistWithGroup();
     },
     { immediate: true }
 );
@@ -120,6 +155,10 @@ function toggleChecklistPerson(itemId: string) {
 }
 
 function removeChecklistPerson(itemId: string) {
+    const item = personalChecklist.value.find((p) => p.id === itemId);
+    if (item) {
+        addRemovedChecklistName(id.value, item.name);
+    }
     personalChecklist.value = personalChecklist.value.filter((p) => p.id !== itemId);
     savePersonalChecklist(id.value, personalChecklist.value);
 }
@@ -382,6 +421,7 @@ async function share() {
                             :key="list.id"
                             :class="cn(
                                 'group relative flex items-center justify-between p-3.5 sm:p-4 rounded-xl border bg-card text-card-foreground shadow-sm hover:shadow-md hover:border-primary/40 active:scale-[0.99] transition-all cursor-pointer',
+                                isMyList(list) && 'border-primary/40 bg-primary/[0.04] ring-1 ring-primary/15',
                                 hasBoughtInList(list) && 'opacity-65 bg-muted/30 hover:opacity-95'
                             )"
                             @click="goToList(list.id)"
@@ -391,18 +431,31 @@ async function share() {
                                 <div
                                     :class="cn(
                                         'w-11 h-11 rounded-xl font-bold flex items-center justify-center text-base shrink-0 transition-colors',
-                                        hasBoughtInList(list)
-                                            ? 'bg-muted text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary'
-                                            : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
+                                        isMyList(list)
+                                            ? 'bg-primary text-primary-foreground shadow-sm'
+                                            : hasBoughtInList(list)
+                                                ? 'bg-muted text-muted-foreground group-hover:bg-primary/20 group-hover:text-primary'
+                                                : 'bg-primary/10 text-primary group-hover:bg-primary group-hover:text-primary-foreground'
                                     )"
                                 >
                                     {{ list.user?.charAt(0).toUpperCase() || '?' }}
                                 </div>
                                 <div class="min-w-0 space-y-0.5">
                                     <div class="flex items-center gap-1.5 min-w-0 flex-wrap">
-                                        <h3 class="font-bold text-sm sm:text-base text-foreground tracking-tight truncate group-hover:text-primary transition-colors">
+                                        <h3
+                                            :class="cn(
+                                                'font-bold text-sm sm:text-base tracking-tight truncate transition-colors',
+                                                isMyList(list) ? 'text-primary' : 'text-foreground group-hover:text-primary'
+                                            )"
+                                        >
                                             {{ list.title }}
                                         </h3>
+                                        <span
+                                            v-if="isMyList(list)"
+                                            class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-semibold bg-primary/15 text-primary border border-primary/25 shrink-0"
+                                        >
+                                            <Sparkles class="w-3 h-3" /> Ma liste
+                                        </span>
                                         <span
                                             v-if="hasBoughtInList(list)"
                                             class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border border-emerald-500/20 shrink-0"
@@ -413,7 +466,7 @@ async function share() {
                                             v-if="isMyList(list)"
                                             variant="ghost"
                                             size="icon"
-                                            class="w-6 h-6 rounded-md text-muted-foreground/60 hover:text-foreground opacity-70 sm:opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
+                                            class="w-6 h-6 rounded-md text-primary/70 hover:text-primary opacity-80 sm:opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
                                             title="Modifier le nom de ma liste"
                                             @click.stop="openEditListTitleModal(list)"
                                         >
@@ -509,103 +562,104 @@ async function share() {
                     </div>
                 </Card>
 
-                <!-- Personal Private Checklist Card -->
+                <!-- Personal Private Checklist Card (Collapsed by default) -->
                 <Card class="border shadow-sm rounded-2xl overflow-hidden bg-card/80 backdrop-blur-sm">
-                    <CardHeader class="p-4 sm:p-6 pb-3 border-b border-border/40">
-                        <div class="flex items-start justify-between gap-3">
-                            <div class="flex items-start gap-3">
-                                <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0 mt-0.5">
+                    <details class="group/details personal-details">
+                        <summary class="flex items-center justify-between gap-3 p-4 sm:p-5 cursor-pointer select-none list-none hover:bg-muted/20 transition-colors">
+                            <div class="flex items-center gap-3 min-w-0">
+                                <div class="w-9 h-9 rounded-xl bg-amber-500/10 text-amber-600 dark:text-amber-400 flex items-center justify-center shrink-0">
                                     <ClipboardCheck class="w-5 h-5" />
                                 </div>
-                                <div>
+                                <div class="min-w-0">
                                     <div class="flex items-center gap-2 flex-wrap">
-                                        <CardTitle id="personal-checklist-heading" class="text-base sm:text-lg font-bold tracking-tight">
+                                        <span id="personal-checklist-heading" class="text-sm sm:text-base font-bold tracking-tight text-foreground">
                                             Mon suivi personnel
-                                        </CardTitle>
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-muted text-muted-foreground border border-border/60">
-                                            <Lock class="w-2.5 h-2.5" /> Privé (sur cet appareil)
+                                        </span>
+                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[11px] font-medium bg-muted text-muted-foreground border border-border/60 shrink-0">
+                                            <Lock class="w-2.5 h-2.5" /> Privé
                                         </span>
                                     </div>
-                                    <CardDescription class="text-xs text-muted-foreground mt-0.5">
-                                        Notez les personnes à qui vous devez offrir un cadeau et cochez au fur et à mesure. Visible uniquement par vous.
-                                    </CardDescription>
+                                    <p class="text-xs text-muted-foreground mt-0.5 truncate">
+                                        Cochez à qui vous avez pris un cadeau ({{ personalChecklist.filter(i => i.checked).length }}/{{ personalChecklist.length }}).
+                                    </p>
                                 </div>
                             </div>
-                        </div>
-                    </CardHeader>
+                            <ChevronDown class="w-4 h-4 text-muted-foreground shrink-0 transition-transform duration-200 group-open/details:rotate-180" />
+                        </summary>
 
-                    <CardContent class="p-3 sm:p-6 space-y-3">
-                        <form
-                            aria-labelledby="personal-checklist-heading"
-                            class="flex items-center gap-2"
-                            @submit.prevent="addChecklistPerson"
-                        >
-                            <label for="new-checklist-person" class="sr-only">Nom de la personne</label>
-                            <Input
-                                id="new-checklist-person"
-                                v-model="newChecklistPerson"
-                                name="personName"
-                                type="text"
-                                placeholder="Ajouter une personne (ex: Mamie, Lucas...)"
-                                class="h-10 rounded-xl flex-1 text-sm"
-                                maxlength="80"
-                                enterkeyhint="done"
-                            />
-                            <Button
-                                type="submit"
-                                size="sm"
-                                class="rounded-xl h-10 px-4 gap-1.5 shrink-0 font-semibold"
-                                :disabled="!newChecklistPerson.trim()"
+                        <CardContent class="p-3 sm:p-5 pt-3 border-t border-border/40 space-y-3">
+                            <form
+                                aria-labelledby="personal-checklist-heading"
+                                class="flex items-center gap-2"
+                                @submit.prevent="addChecklistPerson"
                             >
-                                <Plus class="w-4 h-4" />
-                                <span>Ajouter</span>
-                            </Button>
-                        </form>
-
-                        <div v-if="personalChecklist.length > 0" class="divide-y divide-border/40 rounded-xl border bg-background/50">
-                            <div
-                                v-for="item in personalChecklist"
-                                :key="item.id"
-                                class="flex items-center justify-between gap-2 px-3 py-1.5 hover:bg-muted/30 transition-colors"
-                            >
-                                <label
-                                    :for="`check-${item.id}`"
-                                    class="flex items-center gap-3 flex-1 min-h-[44px] cursor-pointer select-none py-1"
-                                >
-                                    <input
-                                        :id="`check-${item.id}`"
-                                        type="checkbox"
-                                        :name="`check-${item.id}`"
-                                        :checked="item.checked"
-                                        class="personal-checkbox shrink-0"
-                                        @change="toggleChecklistPerson(item.id)"
-                                    />
-                                    <span
-                                        :class="cn(
-                                            'text-sm font-medium transition-all break-all',
-                                            item.checked ? 'line-through text-muted-foreground' : 'text-foreground'
-                                        )"
-                                    >
-                                        {{ item.name }}
-                                    </span>
-                                </label>
+                                <label for="new-checklist-person" class="sr-only">Nom de la personne</label>
+                                <Input
+                                    id="new-checklist-person"
+                                    v-model="newChecklistPerson"
+                                    name="personName"
+                                    type="text"
+                                    placeholder="Ajouter une personne..."
+                                    class="h-10 rounded-xl flex-1 text-sm min-w-0"
+                                    maxlength="80"
+                                    enterkeyhint="done"
+                                />
                                 <Button
-                                    type="button"
-                                    variant="ghost"
-                                    size="icon"
-                                    class="h-8 w-8 rounded-lg text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 shrink-0"
-                                    :title="`Supprimer ${item.name}`"
-                                    @click="removeChecklistPerson(item.id)"
+                                    type="submit"
+                                    size="sm"
+                                    class="rounded-xl h-10 px-4 gap-1.5 shrink-0 font-semibold"
+                                    :disabled="!newChecklistPerson.trim()"
                                 >
-                                    <X class="w-4 h-4" />
+                                    <Plus class="w-4 h-4" />
+                                    <span>Ajouter</span>
                                 </Button>
-                            </div>
-                        </div>
+                            </form>
 
-                        <p v-else class="text-xs text-muted-foreground text-center py-2">
-                            Votre liste personnelle est vide. Ajoutez des prénoms ci-dessus pour suivre vos achats !
-                        </p>
-                    </CardContent>
+                            <div v-if="personalChecklist.length > 0" class="divide-y divide-border/40 rounded-xl border bg-background/50">
+                                <div
+                                    v-for="item in personalChecklist"
+                                    :key="item.id"
+                                    class="flex items-center justify-between gap-2 px-3 py-1 hover:bg-muted/30 transition-colors"
+                                >
+                                    <label
+                                        :for="`check-${item.id}`"
+                                        class="flex items-center gap-3 flex-1 min-h-[44px] cursor-pointer select-none py-1 min-w-0"
+                                    >
+                                        <input
+                                            :id="`check-${item.id}`"
+                                            type="checkbox"
+                                            :name="`check-${item.id}`"
+                                            :checked="item.checked"
+                                            class="personal-checkbox shrink-0"
+                                            @change="toggleChecklistPerson(item.id)"
+                                        />
+                                        <span
+                                            :class="cn(
+                                                'text-sm font-medium transition-all break-all',
+                                                item.checked ? 'line-through text-muted-foreground' : 'text-foreground'
+                                            )"
+                                        >
+                                            {{ item.name }}
+                                        </span>
+                                    </label>
+                                    <Button
+                                        type="button"
+                                        variant="ghost"
+                                        size="icon"
+                                        class="h-8 w-8 rounded-lg text-muted-foreground/60 hover:text-destructive hover:bg-destructive/10 shrink-0"
+                                        :title="`Supprimer ${item.name}`"
+                                        @click="removeChecklistPerson(item.id)"
+                                    >
+                                        <X class="w-4 h-4" />
+                                    </Button>
+                                </div>
+                            </div>
+
+                            <p v-else class="text-xs text-muted-foreground text-center py-2">
+                                Aucune personne dans votre suivi.
+                            </p>
+                        </CardContent>
+                    </details>
                 </Card>
             </main>
         </div>
@@ -680,6 +734,15 @@ async function share() {
 </template>
 
 <style scoped>
+.personal-details > summary::-webkit-details-marker {
+    display: none;
+}
+
+.personal-details > summary:focus-visible {
+    outline: 2px solid hsl(var(--primary));
+    outline-offset: -2px;
+}
+
 .personal-checkbox {
     accent-color: hsl(var(--primary));
     inline-size: 1.25em;

@@ -3,6 +3,7 @@ const LIST_KEY = "wish.list_listId";
 const GROUP_KEY = "wish.list_groupId";
 const RECENT_GROUPS_KEY = "wish.list_recentGroups";
 const PERSONAL_CHECKLIST_PREFIX = "wish.list_personalChecklist_";
+const PERSONAL_CHECKLIST_REMOVED_PREFIX = "wish.list_personalChecklistRemoved_";
 
 export type StoredGroup = { id: string; title: string };
 
@@ -12,13 +13,13 @@ export type PersonalChecklistItem = {
     checked: boolean;
 };
 
-export function getPersonalChecklist(groupId: string): PersonalChecklistItem[] {
+export function getPersonalChecklist(groupId: string): PersonalChecklistItem[] | null {
     try {
         const raw = localStorage.getItem(`${PERSONAL_CHECKLIST_PREFIX}${groupId}`);
-        if (!raw) return [];
+        if (!raw) return null;
         return JSON.parse(raw);
     } catch {
-        return [];
+        return null;
     }
 }
 
@@ -27,6 +28,29 @@ export function savePersonalChecklist(groupId: string, items: PersonalChecklistI
         localStorage.setItem(`${PERSONAL_CHECKLIST_PREFIX}${groupId}`, JSON.stringify(items));
     } catch (e) {
         console.error("Failed to save personal checklist to localStorage", e);
+    }
+}
+
+export function getRemovedChecklistNames(groupId: string): string[] {
+    try {
+        const raw = localStorage.getItem(`${PERSONAL_CHECKLIST_REMOVED_PREFIX}${groupId}`);
+        if (!raw) return [];
+        return JSON.parse(raw);
+    } catch {
+        return [];
+    }
+}
+
+export function addRemovedChecklistName(groupId: string, name: string) {
+    try {
+        const current = getRemovedChecklistNames(groupId);
+        const normalized = name.trim().toLowerCase();
+        if (!current.includes(normalized)) {
+            current.push(normalized);
+            localStorage.setItem(`${PERSONAL_CHECKLIST_REMOVED_PREFIX}${groupId}`, JSON.stringify(current));
+        }
+    } catch (e) {
+        console.error("Failed to save removed checklist name to localStorage", e);
     }
 }
 

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, computed, watch } from 'vue';
+import { ref, watch } from 'vue';
 import { useForm } from 'vee-validate';
 import { toTypedSchema } from '@vee-validate/zod';
 import * as z from 'zod';
@@ -15,10 +15,9 @@ import {
 import { FormField, FormItem, FormLabel, FormControl, FormMessage } from '../ui/form';
 import { Input } from '../ui/input';
 import { useUserStore } from '@/utils/store';
-import { getLists } from '@/utils/storage';
 import { extractListId } from '@/utils/api';
 import type { CreateList } from '@/utils/types';
-import { Loader2, Link2, PlusCircle, Sparkles } from 'lucide-vue-next';
+import { Loader2, Link2, PlusCircle } from 'lucide-vue-next';
 
 const props = withDefaults(
     defineProps<{
@@ -46,16 +45,6 @@ watch(() => props.defaultMode, (newVal) => {
 // --- Form for Existing List ---
 const existingUrlOrId = ref('');
 const existingError = ref('');
-
-const localLists = computed(() => {
-    const listIds = getLists();
-    return listIds.filter(id => !props.existingListIds.includes(id));
-});
-
-function selectLocalList(id: string) {
-    existingUrlOrId.value = id;
-    existingError.value = '';
-}
 
 async function onSubmitExisting() {
     existingError.value = '';
@@ -138,8 +127,8 @@ const onSubmitNew = handleSubmit(async (values) => {
 
 <template>
     <Dialog :open="props.open" @update:open="props.onClose">
-        <DialogContent class="sm:max-w-[480px] rounded-2xl p-6">
-            <DialogHeader class="text-left space-y-1">
+        <DialogContent class="sm:max-w-[460px] rounded-2xl p-5 sm:p-6">
+            <DialogHeader class="text-left space-y-1 min-w-0">
                 <DialogTitle class="text-xl font-bold">Ajouter une liste au groupe</DialogTitle>
                 <DialogDescription class="text-xs sm:text-sm text-muted-foreground">
                     Créez une nouvelle liste pour cet événement ou rattachez une liste existante.
@@ -147,30 +136,30 @@ const onSubmitNew = handleSubmit(async (values) => {
             </DialogHeader>
 
             <!-- Mode Selector / Segmented Tabs -->
-            <div class="flex items-center gap-1.5 p-1 bg-muted/50 rounded-xl text-xs mt-3 mb-2">
+            <div class="flex items-center gap-1.5 p-1 bg-muted/50 rounded-xl text-xs mt-2 mb-1 min-w-0">
                 <button
                     type="button"
-                    class="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg transition-all"
+                    class="flex-1 flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg transition-all min-w-0"
                     :class="mode === 'new' ? 'bg-background text-foreground font-semibold shadow-sm' : 'text-muted-foreground hover:text-foreground font-medium'"
                     @click="mode = 'new'"
                 >
-                    <PlusCircle class="w-3.5 h-3.5" :class="mode === 'new' ? 'text-primary' : ''" />
-                    <span>Nouvelle liste</span>
+                    <PlusCircle class="w-3.5 h-3.5 shrink-0" :class="mode === 'new' ? 'text-primary' : ''" />
+                    <span class="truncate">Nouvelle liste</span>
                 </button>
                 <button
                     type="button"
-                    class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg transition-all"
-                    :class="mode === 'existing' ? 'bg-background text-foreground font-medium shadow-sm' : 'text-muted-foreground/60 hover:text-muted-foreground font-normal'"
+                    class="flex items-center justify-center gap-1.5 py-2 px-3 rounded-lg transition-all shrink-0"
+                    :class="mode === 'existing' ? 'bg-background text-foreground font-semibold shadow-sm' : 'text-muted-foreground/70 hover:text-foreground font-medium'"
                     @click="mode = 'existing'"
                     title="Rattacher une liste existante via son URL"
                 >
-                    <Link2 class="w-3 h-3 opacity-60" />
-                    <span class="text-[11px]">Par URL</span>
+                    <Link2 class="w-3.5 h-3.5 shrink-0" :class="mode === 'existing' ? 'text-primary' : 'opacity-70'" />
+                    <span class="text-xs">Par URL</span>
                 </button>
             </div>
 
             <!-- Mode 1: Create Brand New List in Group (Primary / Default) -->
-            <form v-if="mode === 'new'" @submit="onSubmitNew" class="space-y-4 py-1">
+            <form v-if="mode === 'new'" @submit="onSubmitNew" class="space-y-4 py-1 min-w-0">
                 <FormField v-slot="{ componentField }" name="username">
                     <FormItem>
                         <FormLabel class="text-xs font-semibold">Prénom ou pseudo de la personne *</FormLabel>
@@ -178,7 +167,7 @@ const onSubmitNew = handleSubmit(async (values) => {
                             <Input
                                 type="text"
                                 placeholder="ex: Lucas, Maman, Thomas..."
-                                class="h-11 rounded-xl"
+                                class="h-11 rounded-xl w-full"
                                 maxlength="20"
                                 autofocus
                                 v-bind="componentField"
@@ -195,7 +184,7 @@ const onSubmitNew = handleSubmit(async (values) => {
                             <Input
                                 type="text"
                                 placeholder="ex: Liste de Lucas pour Noël"
-                                class="h-11 rounded-xl"
+                                class="h-11 rounded-xl w-full"
                                 maxlength="100"
                                 v-bind="componentField"
                             />
@@ -217,10 +206,10 @@ const onSubmitNew = handleSubmit(async (values) => {
                 </div>
 
                 <DialogFooter class="flex-col-reverse sm:flex-row gap-2 pt-2">
-                    <Button variant="outline" class="rounded-xl h-11" @click="onClose" :disabled="loading">
+                    <Button type="button" variant="outline" class="rounded-xl h-11 w-full sm:w-auto" @click="onClose" :disabled="loading">
                         Annuler
                     </Button>
-                    <Button class="rounded-xl h-11 font-semibold shadow-sm" @click="onSubmitNew" :disabled="loading">
+                    <Button type="submit" class="rounded-xl h-11 font-semibold shadow-sm w-full sm:w-auto" :disabled="loading">
                         <Loader2 v-if="loading" class="w-4 h-4 mr-2 animate-spin" />
                         Créer et ajouter
                     </Button>
@@ -228,16 +217,17 @@ const onSubmitNew = handleSubmit(async (values) => {
             </form>
 
             <!-- Mode 2: Existing List via URL/ID (Secondary) -->
-            <div v-else class="space-y-4 py-1">
-                <div class="space-y-2">
-                    <label class="text-xs font-semibold text-foreground">
+            <div v-else class="space-y-4 py-1 min-w-0">
+                <div class="space-y-2 min-w-0">
+                    <label for="existing-list-url" class="text-xs font-semibold text-foreground">
                         Lien ou identifiant de la liste *
                     </label>
                     <Input
+                        id="existing-list-url"
                         v-model="existingUrlOrId"
                         type="text"
                         placeholder="ex: https://.../list/c288d... ou c288d..."
-                        class="h-11 rounded-xl"
+                        class="h-11 rounded-xl w-full"
                         autofocus
                         @keydown.enter.prevent="onSubmitExisting"
                     />
@@ -247,28 +237,6 @@ const onSubmitNew = handleSubmit(async (values) => {
                     <p v-else class="text-[11px] text-muted-foreground leading-relaxed">
                         Collez l'URL de partage complète ou l'identifiant de la liste à rattacher à cet événement.
                     </p>
-                </div>
-
-                <!-- Quick Pick for My Local List -->
-                <div v-if="localLists.length > 0" class="p-3 rounded-xl bg-primary/5 border border-primary/20 space-y-1.5">
-                    <div class="flex items-center gap-1.5 text-xs font-semibold text-primary">
-                        <Sparkles class="w-3.5 h-3.5" />
-                        <span>Votre liste récente détectée</span>
-                    </div>
-                    <div class="flex items-center justify-between gap-2">
-                        <span class="text-xs font-mono text-muted-foreground truncate">
-                            {{ localLists[0] }}
-                        </span>
-                        <Button
-                            type="button"
-                            size="sm"
-                            variant="secondary"
-                            class="h-7 text-xs rounded-lg shrink-0"
-                            @click="selectLocalList(localLists[0])"
-                        >
-                            Utiliser celle-ci
-                        </Button>
-                    </div>
                 </div>
 
                 <div class="text-center pt-1">
@@ -282,11 +250,12 @@ const onSubmitNew = handleSubmit(async (values) => {
                 </div>
 
                 <DialogFooter class="flex-col-reverse sm:flex-row gap-2 pt-2">
-                    <Button variant="outline" class="rounded-xl h-11" @click="onClose" :disabled="loading">
+                    <Button type="button" variant="outline" class="rounded-xl h-11 w-full sm:w-auto" @click="onClose" :disabled="loading">
                         Annuler
                     </Button>
                     <Button
-                        class="rounded-xl h-11 font-semibold shadow-sm"
+                        type="button"
+                        class="rounded-xl h-11 font-semibold shadow-sm w-full sm:w-auto"
                         @click="onSubmitExisting"
                         :disabled="loading || !existingUrlOrId.trim()"
                     >
