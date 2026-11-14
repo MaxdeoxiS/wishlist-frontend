@@ -32,7 +32,7 @@ function clearSearch() {
 
 <template>
     <header
-        :class="cn('sticky top-0 z-30 flex h-16 items-center gap-3 border-b border-border/60 bg-background/80 backdrop-blur-md px-4 sm:px-6 transition-all', !withList ? 'justify-between' : '')">
+        :class="cn('sticky top-0 z-30 mb-3 sm:mb-4 flex h-16 items-center gap-3 border-b border-border/60 bg-background/80 backdrop-blur-md px-4 sm:px-6 transition-all', !withList ? 'justify-between' : '')">
         <Logo />
 
         <div v-if="props.withList" class="relative ml-auto flex-1 max-w-[280px] sm:max-w-[340px]">

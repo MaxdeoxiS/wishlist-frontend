@@ -2,8 +2,33 @@ const USERNAME_KEY = "wish.list_username";
 const LIST_KEY = "wish.list_listId";
 const GROUP_KEY = "wish.list_groupId";
 const RECENT_GROUPS_KEY = "wish.list_recentGroups";
+const PERSONAL_CHECKLIST_PREFIX = "wish.list_personalChecklist_";
 
 export type StoredGroup = { id: string; title: string };
+
+export type PersonalChecklistItem = {
+    id: string;
+    name: string;
+    checked: boolean;
+};
+
+export function getPersonalChecklist(groupId: string): PersonalChecklistItem[] {
+    try {
+        const raw = localStorage.getItem(`${PERSONAL_CHECKLIST_PREFIX}${groupId}`);
+        if (!raw) return [];
+        return JSON.parse(raw);
+    } catch {
+        return [];
+    }
+}
+
+export function savePersonalChecklist(groupId: string, items: PersonalChecklistItem[]) {
+    try {
+        localStorage.setItem(`${PERSONAL_CHECKLIST_PREFIX}${groupId}`, JSON.stringify(items));
+    } catch (e) {
+        console.error("Failed to save personal checklist to localStorage", e);
+    }
+}
 
 export function setUser(username: string) {
     localStorage.setItem(USERNAME_KEY, username);
