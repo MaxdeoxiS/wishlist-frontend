@@ -70,6 +70,15 @@ export function setList(id: string) {
     localStorage.setItem(LIST_KEY, `${id}`);
 }
 
+export function removeList(id: string) {
+    const remaining = getLists().filter((item) => item && item !== id);
+    if (remaining.length === 0) {
+        localStorage.removeItem(LIST_KEY);
+    } else {
+        localStorage.setItem(LIST_KEY, remaining.join(","));
+    }
+}
+
 export async function clearLists() {
     localStorage.removeItem(LIST_KEY);
 }

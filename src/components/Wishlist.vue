@@ -6,7 +6,7 @@ import ListHeader from './ListHeader.vue';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import Button from './ui/button/Button.vue';
-import { ChevronDown, Gift, Plus, Search, Share2, Sparkles, UserCheck, Users, Pencil, Loader2 } from 'lucide-vue-next';
+import { ChevronDown, Gift, Plus, Search, Share2, Sparkles, UserCheck, Users, Pencil, Loader2, Trash2 } from 'lucide-vue-next';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from './ui/dialog';
 import { Input } from './ui/input';
 import CreateWishModal from './modals/CreateWishModal.vue';
@@ -24,6 +24,7 @@ const props = defineProps<Omit<Wishlist, "id"> & {
     onCreate: (wish: CreateWish) => void;
     share: () => void;
     onDelete: (wishId: number) => void;
+    onDeleteList?: () => Promise<unknown> | void;
     onUpdateTitle?: (title: string) => void;
     group?: WishlistGroup | null;
 }>();
@@ -33,6 +34,21 @@ const isAuthor = computed(() => store.username === props.user);
 const editTitleModalOpen = ref(false);
 const newTitle = ref('');
 const isSavingTitle = ref(false);
+const deleteListModalOpen = ref(false);
+const isDeletingList = ref(false);
+
+async function confirmDeleteList() {
+    if (!isAuthor.value || !props.onDeleteList || isDeletingList.value) return;
+    isDeletingList.value = true;
+    try {
+        await props.onDeleteList();
+        deleteListModalOpen.value = false;
+    } catch {
+        // Error handled by caller mutation
+    } finally {
+        isDeletingList.value = false;
+    }
+}
 
 function openEditTitleModal() {
     if (!isAuthor.value) return;
@@ -162,6 +178,20 @@ function navigateToList(listId: string) {
                             >
                                 <UserCheck class="w-3.5 h-3.5" aria-hidden="true" />
                                 <span>C'est ma liste ?</span>
+                            </Button>
+
+                            <!-- Delete list button if author -->
+                            <Button
+                                v-else-if="props.onDeleteList"
+                                variant="ghost"
+                                size="sm"
+                                class="relative rounded-full text-xs gap-1.5 h-8 px-2.5 sm:px-3 shrink-0 text-muted-foreground hover:text-destructive hover:bg-destructive/10 after:content-[''] after:absolute after:-inset-1.5 sm:after:hidden"
+                                title="Supprimer ma liste"
+                                aria-label="Supprimer ma liste"
+                                @click="deleteListModalOpen = true"
+                            >
+                                <Trash2 class="w-3.5 h-3.5" aria-hidden="true" />
+                                <span class="hidden sm:inline">Supprimer</span>
                             </Button>
                         </div>
 
@@ -307,6 +337,45 @@ function navigateToList(listId: string) {
                 <Button class="rounded-xl h-10 font-semibold" @click="saveNewTitle" :disabled="!newTitle.trim() || isSavingTitle">
                     <Loader2 v-if="isSavingTitle" class="w-4 h-4 mr-2 animate-spin" />
                     Enregistrer
+                </Button>
+            </DialogFooter>
+        </DialogContent>
+    </Dialog>
+
+    <!-- Delete List Confirmation Modal -->
+    <Dialog :open="deleteListModalOpen" @update:open="(val) => { if (!isDeletingList) deleteListModalOpen = val }">
+        <DialogContent class="sm:max-w-[420px] rounded-2xl p-6">
+            <DialogHeader class="text-left space-y-2">
+                <div class="w-11 h-11 rounded-2xl bg-destructive/10 text-destructive flex items-center justify-center mb-1">
+                    <Trash2 class="w-5 h-5" aria-hidden="true" />
+                </div>
+                <DialogTitle class="text-lg font-bold">Supprimer cette liste ?</DialogTitle>
+                <DialogDescription class="text-xs sm:text-sm text-muted-foreground leading-relaxed">
+                    La liste <strong>« {{ props.title }} »</strong> et tous ses souhaits ({{ totalCount }}) seront définitivement supprimés. Cette action est irréversible.
+                </DialogDescription>
+            </DialogHeader>
+
+            <DialogFooter class="flex-col-reverse sm:flex-row gap-2 mt-3">
+                <Button
+                    type="button"
+                    variant="outline"
+                    class="rounded-xl h-10"
+                    autofocus
+                    :disabled="isDeletingList"
+                    @click="deleteListModalOpen = false"
+                >
+                    Annuler
+                </Button>
+                <Button
+                    type="button"
+                    variant="destructive"
+                    class="rounded-xl h-10 font-semibold gap-2"
+                    :disabled="isDeletingList"
+                    @click="confirmDeleteList"
+                >
+                    <Loader2 v-if="isDeletingList" class="w-4 h-4 animate-spin" aria-hidden="true" />
+                    <Trash2 v-else class="w-4 h-4" aria-hidden="true" />
+                    Supprimer la liste
                 </Button>
             </DialogFooter>
         </DialogContent>

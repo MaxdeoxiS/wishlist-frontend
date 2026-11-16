@@ -1,9 +1,10 @@
 <script setup lang="ts">
 import Wishlist from '@/components/Wishlist.vue';
 import ListHeader from '@/components/ListHeader.vue';
-import { addWish, deleteWish, getGroup, getList, setBought, updateList } from '@/utils/api';
+import { addWish, deleteList, deleteWish, getGroup, getList, setBought, updateList } from '@/utils/api';
+import { removeList } from '@/utils/storage';
 import { useUserStore } from '@/utils/store';
-import type { CreateWish, Wish, Wishlist as WishlistData } from '@/utils/types';
+import type { CreateWish, Wish, Wishlist as WishlistData, WishlistGroup } from '@/utils/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query'
 import { computed } from 'vue';
 import { useRoute, useRouter } from 'vue-router'
@@ -159,6 +160,36 @@ const updateTitleMutation = useMutation({
   },
 })
 
+const deleteListMutation = useMutation({
+  mutationFn: async () => {
+    const ok = await deleteList(id as string)
+    if (!ok) {
+      throw new Error('Impossible de supprimer la liste')
+    }
+    return ok
+  },
+  onSuccess: () => {
+    removeList(id as string)
+    const groupTarget = data.value?.groupId
+    queryClient.removeQueries({ queryKey: ['wishlist', id] })
+    if (groupTarget) {
+      queryClient.setQueryData<WishlistGroup>(['group', groupTarget], (prev) => {
+        if (!prev) return prev
+        return {
+          ...prev,
+          list: (prev.list || []).filter((l) => l.id !== id),
+        }
+      })
+      queryClient.invalidateQueries({ queryKey: ['group', groupTarget] })
+    }
+    toast.success('Liste supprimée')
+    router.replace(groupTarget ? `/group/${groupTarget}` : '/')
+  },
+  onError: () => {
+    toast.error('Impossible de supprimer la liste')
+  },
+})
+
 function onAddWish(data: CreateWish) {
   addMutation.mutate(data)
 }
@@ -253,6 +284,7 @@ async function share() {
     @buy="(wishId, cancel) => mutation.mutate({ wishId, cancel })"
     @create="onAddWish"
     @delete="id => deleteMutation.mutate(id)"
+    :on-delete-list="() => deleteListMutation.mutateAsync()"
     @update-title="title => updateTitleMutation.mutate(title)"
     :share="share"
   />

@@ -286,3 +286,13 @@ export async function deleteWish(listId: string, wishId: number) {
 
     return true
 }
+
+export async function deleteList(id: string): Promise<boolean> {
+    try {
+        const res = await fetch(`${baseUrl}/${id}`, { method: "DELETE" });
+        return res.ok;
+    } catch (e) {
+        console.error("Error deleting list:", e);
+        return false;
+    }
+}
