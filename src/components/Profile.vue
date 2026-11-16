@@ -141,7 +141,7 @@ function logout() {
                 class="rounded-lg text-sm gap-2 cursor-pointer font-medium text-foreground hover:text-primary"
             >
                 <Plus class="w-4 h-4" />
-                <span>Créer un événement / Noël</span>
+                <span>Créer un événement</span>
             </DropdownMenuItem>
 
             <!-- Logout if logged in -->

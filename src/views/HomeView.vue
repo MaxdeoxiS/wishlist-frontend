@@ -10,7 +10,7 @@ import type { CreateList, CreateGroup } from '@/utils/types';
 import { useMutation } from '@tanstack/vue-query';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { Gift, Sparkles, Share2, CheckCircle2, ArrowRight, Users, ChevronRight } from 'lucide-vue-next';
+import { Gift, Sparkles, ArrowRight, Users } from 'lucide-vue-next';
 import { toast } from 'vue-sonner';
 
 const createListModalOpen = ref(false);
@@ -109,14 +109,14 @@ function onCreateGroup(data: CreateGroup) {
                         @click="createGroupModalOpen = true"
                     >
                         <Users class="w-5 h-5 text-primary" />
-                        Créer un groupe / Noël
+                        Créer un groupe
                     </Button>
                 </div>
 
                 <!-- Resumption Bar (Existing List / Groups) -->
                 <div
                     v-if="existingListId || recentGroups.length > 0"
-                    class="flex flex-wrap items-center justify-center gap-2 mb-12 p-2 rounded-2xl bg-card/60 border border-border/50 max-w-lg mx-auto"
+                    class="flex flex-wrap items-center justify-center gap-2 p-2 rounded-2xl bg-card/60 border border-border/50 max-w-lg mx-auto"
                 >
                     <Button
                         v-if="existingListId"
@@ -141,41 +141,6 @@ function onCreateGroup(data: CreateGroup) {
                         <span>{{ recentGroups[0].title }}</span>
                         <ArrowRight class="w-3 h-3 ml-0.5" />
                     </Button>
-                </div>
-
-                <div v-else class="mb-10"></div>
-
-                <!-- Features Grid -->
-                <div class="grid grid-cols-1 sm:grid-cols-3 gap-3.5 text-left max-w-xl mx-auto">
-                    <div class="p-4 rounded-2xl bg-card/80 border border-border/60 shadow-sm backdrop-blur-sm flex items-start gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
-                            <Gift class="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-sm text-foreground">Photos & liens</h3>
-                            <p class="text-xs text-muted-foreground mt-0.5">Ajoutez photos, prix et boutiques en ligne.</p>
-                        </div>
-                    </div>
-
-                    <div class="p-4 rounded-2xl bg-card/80 border border-border/60 shadow-sm backdrop-blur-sm flex items-start gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center shrink-0">
-                            <Users class="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-sm text-foreground">Groupes & Noël</h3>
-                            <p class="text-xs text-muted-foreground mt-0.5">Regroupez les listes de toute la famille sous un seul lien.</p>
-                        </div>
-                    </div>
-
-                    <div class="p-4 rounded-2xl bg-card/80 border border-border/60 shadow-sm backdrop-blur-sm flex items-start gap-3">
-                        <div class="w-9 h-9 rounded-xl bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
-                            <CheckCircle2 class="w-5 h-5" />
-                        </div>
-                        <div>
-                            <h3 class="font-bold text-sm text-foreground">Zéro doublon</h3>
-                            <p class="text-xs text-muted-foreground mt-0.5">Chacun réserve sans gâcher la surprise.</p>
-                        </div>
-                    </div>
                 </div>
             </div>
         </main>

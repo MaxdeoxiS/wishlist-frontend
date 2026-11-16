@@ -122,8 +122,8 @@ function navigateToList(listId: string) {
                 <Card class="border shadow-sm rounded-2xl overflow-hidden bg-card/80 backdrop-blur-sm">
                     <!-- Header with Title & Stats -->
                     <CardHeader class="p-4 sm:p-6 pb-3 border-b border-border/40">
-                        <div class="flex items-start justify-between gap-3">
-                            <div>
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div class="min-w-0">
                                 <div class="flex items-center gap-2 mb-1 flex-wrap">
                                     <CardTitle class="text-xl sm:text-2xl font-extrabold tracking-tight">
                                         {{ props.title }}
@@ -149,16 +149,19 @@ function navigateToList(listId: string) {
                                 </CardDescription>
                             </div>
 
-                            <!-- Ownership claim button if guest -->
+                            <!-- Ownership claim button -->
                             <Button
-                                v-if="store.username.length === 0"
+                                v-if="!isAuthor"
                                 variant="outline"
                                 size="sm"
-                                class="rounded-full text-xs gap-1.5 h-8 px-3 shrink-0"
+                                :class="[
+                                    'relative rounded-full text-xs gap-1.5 h-8 px-3 shrink-0 after:content-[\'\'] after:absolute after:-inset-1.5 sm:after:hidden',
+                                    store.username.length === 0 ? 'hidden sm:inline-flex' : 'inline-flex'
+                                ]"
                                 @click="ownershipModalOpen = true"
                             >
-                                <UserCheck class="w-3.5 h-3.5" />
-                                <span class="hidden sm:inline">C'est ma liste ?</span>
+                                <UserCheck class="w-3.5 h-3.5" aria-hidden="true" />
+                                <span>C'est ma liste ?</span>
                             </Button>
                         </div>
 
@@ -245,7 +248,7 @@ function navigateToList(listId: string) {
                     class="rounded-full h-11 px-4 gap-1.5 shrink-0 border-border/80"
                     @click="props.share"
                 >
-                    <Share2 class="w-4 h-4" />
+                    <Share2 class="w-4 h-4" aria-hidden="true" />
                     <span class="text-xs font-semibold">Partager</span>
                 </Button>
 
@@ -254,8 +257,18 @@ function navigateToList(listId: string) {
                     class="flex-1 rounded-full h-11 font-bold shadow-md gap-2"
                     @click="addModalOpen = true"
                 >
-                    <Plus class="w-5 h-5" />
+                    <Plus class="w-5 h-5" aria-hidden="true" />
                     <span>Ajouter une idée</span>
+                </Button>
+
+                <Button
+                    v-else-if="store.username.length === 0"
+                    variant="secondary"
+                    class="flex-1 rounded-full h-11 font-semibold gap-2 border border-primary/20 bg-primary/10 text-primary hover:bg-primary/15"
+                    @click="ownershipModalOpen = true"
+                >
+                    <UserCheck class="w-4 h-4" aria-hidden="true" />
+                    <span>C'est ma liste</span>
                 </Button>
             </div>
         </div>

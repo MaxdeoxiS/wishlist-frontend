@@ -85,6 +85,12 @@
   padding-top: calc(env(safe-area-inset-top, 0px) + 0.5rem);
 }
 
+@media (max-width: 639px) {
+  html {
+    scroll-padding-bottom: calc(4.5rem + env(safe-area-inset-bottom, 0px));
+  }
+}
+
 /* List Vue TransitionGroup */
 .wish-list-move,
 .wish-list-enter-active,
