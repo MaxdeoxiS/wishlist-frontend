@@ -25,8 +25,32 @@ const { data, isLoading, isError } = useQuery({
 
 const mutation = useMutation({
   mutationFn: ({ wishId, cancel }: { wishId: number, cancel: boolean }) => setBought(id as string, wishId, cancel ? null : store.username),
+  onMutate: async ({ wishId, cancel }: { wishId: number, cancel: boolean }) => {
+    await queryClient.cancelQueries({ queryKey: ['wishlist', id] })
+    const previousWishlist = queryClient.getQueryData<WishlistData>(['wishlist', id])
+
+    if (previousWishlist) {
+      queryClient.setQueryData<WishlistData>(['wishlist', id], {
+        ...previousWishlist,
+        wishes: previousWishlist.wishes.map(w =>
+          w.id === wishId ? { ...w, bought_by: cancel ? undefined : store.username } : w
+        ),
+      })
+    }
+
+    return { previousWishlist }
+  },
+  onError: (_err, _variables, context) => {
+    if (context?.previousWishlist) {
+      queryClient.setQueryData(['wishlist', id], context.previousWishlist)
+    }
+    toast.error('Impossible de mettre à jour la réservation')
+  },
+  onSettled: () => {
+    queryClient.invalidateQueries({ queryKey: ['wishlist', id] })
+    queryClient.invalidateQueries({ queryKey: ['group'] })
+  },
   onSuccess: (_, variables) => {
-    queryClient.invalidateQueries({ queryKey: ['wishlist'] })
     if (variables.cancel) {
       toast.info('Réservation annulée')
     } else {
@@ -75,23 +99,63 @@ const addMutation = useMutation({
 
 const deleteMutation = useMutation({
   mutationFn: (wishId: number) => deleteWish(id as string, wishId),
+  onMutate: async (wishId: number) => {
+    await queryClient.cancelQueries({ queryKey: ['wishlist', id] })
+    const previousWishlist = queryClient.getQueryData<WishlistData>(['wishlist', id])
+
+    if (previousWishlist) {
+      queryClient.setQueryData<WishlistData>(['wishlist', id], {
+        ...previousWishlist,
+        wishes: previousWishlist.wishes.filter(w => w.id !== wishId),
+      })
+    }
+
+    return { previousWishlist }
+  },
+  onError: (_err, _wishId, context) => {
+    if (context?.previousWishlist) {
+      queryClient.setQueryData(['wishlist', id], context.previousWishlist)
+    }
+    toast.error('Impossible de supprimer ce souhait')
+  },
+  onSettled: () => {
+    queryClient.invalidateQueries({ queryKey: ['wishlist', id] })
+    queryClient.invalidateQueries({ queryKey: ['group'] })
+  },
   onSuccess: () => {
-    queryClient.invalidateQueries({ queryKey: ['wishlist'] })
     toast.info('Souhait supprimé de la liste')
   },
 })
 
 const updateTitleMutation = useMutation({
   mutationFn: (newTitle: string) => updateList(id as string, { title: newTitle }),
+  onMutate: async (newTitle: string) => {
+    await queryClient.cancelQueries({ queryKey: ['wishlist', id] })
+    const previousWishlist = queryClient.getQueryData<WishlistData>(['wishlist', id])
+
+    if (previousWishlist) {
+      queryClient.setQueryData<WishlistData>(['wishlist', id], {
+        ...previousWishlist,
+        title: newTitle,
+      })
+    }
+
+    return { previousWishlist }
+  },
   onSuccess: (updated) => {
     if (updated) {
-      queryClient.invalidateQueries({ queryKey: ['wishlist', id] })
-      queryClient.invalidateQueries({ queryKey: ['group'] })
       toast.success('Nom de la liste mis à jour ! ✨')
     }
   },
-  onError: () => {
+  onError: (_err, _newTitle, context) => {
+    if (context?.previousWishlist) {
+      queryClient.setQueryData(['wishlist', id], context.previousWishlist)
+    }
     toast.error('Impossible de modifier le nom de la liste')
+  },
+  onSettled: () => {
+    queryClient.invalidateQueries({ queryKey: ['wishlist', id] })
+    queryClient.invalidateQueries({ queryKey: ['group'] })
   },
 })
 

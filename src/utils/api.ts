@@ -5,6 +5,12 @@ const apiUrl = rawUrl.endsWith("/") ? rawUrl : `${rawUrl}/`
 
 const baseUrl = `${apiUrl}list`
 
+export function warmupBackend() {
+    fetch(`${apiUrl}health`, { method: "GET" }).catch(() => {
+        // Ignore warmup failures; actual requests handle errors
+    });
+}
+
 export function extractListId(input: string): string {
     const trimmed = input.trim();
     const match = trimmed.match(/\/list\/([a-zA-Z0-9_-]+)/);

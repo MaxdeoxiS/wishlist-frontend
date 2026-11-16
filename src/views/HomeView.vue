@@ -6,8 +6,8 @@ import { Button } from '@/components/ui/button';
 import { createlist, createGroup } from '@/utils/api';
 import { getLists, setList, getRecentGroups, saveRecentGroup } from '@/utils/storage';
 import { useUserStore } from '@/utils/store';
-import type { CreateList, CreateGroup } from '@/utils/types';
-import { useMutation } from '@tanstack/vue-query';
+import type { CreateList, CreateGroup, Wishlist, WishlistGroup } from '@/utils/types';
+import { useMutation, useQueryClient } from '@tanstack/vue-query';
 import { computed, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { Gift, Sparkles, ArrowRight, Users } from 'lucide-vue-next';
@@ -18,6 +18,7 @@ const createGroupModalOpen = ref(false);
 
 const router = useRouter();
 const store = useUserStore();
+const queryClient = useQueryClient();
 
 const existingListId = computed(() => {
     const lists = getLists();
@@ -29,37 +30,60 @@ const recentGroups = computed(() => getRecentGroups());
 const createListMutation = useMutation({
     mutationFn: (data: CreateList) => createlist(data),
     onSuccess: (data) => {
-        if (data) {
-            setList(data.id);
-            createListModalOpen.value = false;
-            store.setUsername(data.user);
-            toast.success('Liste créée avec succès ! 🎉');
-            router.push(`/list/${data.id}`);
+        if (!data) {
+            toast.error('Erreur lors de la création de la liste.');
+            return;
         }
+        setList(data.id);
+        queryClient.setQueryData<Wishlist>(['wishlist', data.id], {
+            ...data,
+            wishes: data.wishes ?? [],
+        });
+        createListModalOpen.value = false;
+        store.setUsername(data.user);
+        toast.success('Liste créée avec succès ! 🎉');
+        router.push(`/list/${data.id}`);
+    },
+    onError: () => {
+        toast.error('Erreur lors de la création de la liste.');
     },
 });
 
-function onCreateList(data: CreateList) {
-    createListMutation.mutate(data);
+async function onCreateList(data: CreateList) {
+    try {
+        await createListMutation.mutateAsync(data);
+    } catch {
+        // Error handled by mutation onError
+    }
 }
 
 const createGroupMutation = useMutation({
     mutationFn: (data: CreateGroup) => createGroup(data),
     onSuccess: (data) => {
-        if (data) {
-            saveRecentGroup({ id: data.id, title: data.title });
-            createGroupModalOpen.value = false;
-            toast.success(`Événement « ${data.title} » créé ! 🎉`);
-            router.push(`/group/${data.id}`);
+        if (!data) {
+            toast.error('Erreur lors de la création du groupe.');
+            return;
         }
+        saveRecentGroup({ id: data.id, title: data.title });
+        queryClient.setQueryData<WishlistGroup>(['group', data.id], {
+            ...data,
+            list: data.list ?? [],
+        });
+        createGroupModalOpen.value = false;
+        toast.success(`Événement « ${data.title} » créé ! 🎉`);
+        router.push(`/group/${data.id}`);
     },
     onError: () => {
         toast.error('Erreur lors de la création du groupe.');
     },
 });
 
-function onCreateGroup(data: CreateGroup) {
-    createGroupMutation.mutate(data);
+async function onCreateGroup(data: CreateGroup) {
+    try {
+        await createGroupMutation.mutateAsync(data);
+    } catch {
+        // Error handled by mutation onError
+    }
 }
 </script>
 

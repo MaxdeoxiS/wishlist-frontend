@@ -34,6 +34,7 @@ const { handleSubmit, resetForm } = useForm({
 });
 
 const onSubmit = handleSubmit(async (values) => {
+    if (loading.value) return;
     loading.value = true;
     try {
         await props.create({
@@ -79,11 +80,11 @@ const onSubmit = handleSubmit(async (values) => {
             </form>
 
             <DialogFooter class="flex-col-reverse sm:flex-row gap-2 mt-4">
-                <Button variant="outline" class="rounded-xl h-11" @click="onClose" :disabled="loading">
+                <Button type="button" variant="outline" class="rounded-xl h-11" @click="onClose" :disabled="loading">
                     Annuler
                 </Button>
-                <Button class="rounded-xl h-11 font-semibold shadow-sm" @click="onSubmit" :disabled="loading">
-                    <Loader2 v-if="loading" class="w-4 h-4 mr-2 animate-spin" />
+                <Button type="submit" class="rounded-xl h-11 font-semibold shadow-sm" @click="onSubmit" :disabled="loading">
+                    <Loader2 v-if="loading" class="w-4 h-4 mr-2 animate-spin" aria-hidden="true" />
                     Créer l'événement
                 </Button>
             </DialogFooter>

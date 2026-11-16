@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { addListToGroup, createlist, getGroup, removeListFromGroup, updateList } from '@/utils/api';
-import type { CreateList } from '@/utils/types';
+import type { CreateList, Wishlist, WishlistGroup } from '@/utils/types';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/vue-query';
 import { useRoute, useRouter } from 'vue-router';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -190,7 +190,20 @@ async function handleAddExisting(urlOrId: string) {
         return false;
     }
 
-    await queryClient.invalidateQueries({ queryKey: ['group', id.value] });
+    if (res.data) {
+        queryClient.setQueryData<WishlistGroup>(['group', id.value], (prev) => {
+            if (!prev) return prev;
+            const listWithWishes: Wishlist = { ...res.data!, wishes: res.data!.wishes ?? [] };
+            const exists = prev.list?.some((l) => l.id === listWithWishes.id);
+            return {
+                ...prev,
+                list: exists
+                    ? prev.list.map((l) => (l.id === listWithWishes.id ? listWithWishes : l))
+                    : [listWithWishes, ...(prev.list ?? [])],
+            };
+        });
+    }
+    queryClient.invalidateQueries({ queryKey: ['group', id.value] });
     toast.success('Liste ajoutée avec succès au groupe ! 🎉');
     return true;
 }
@@ -203,7 +216,16 @@ async function handleCreateNew(listData: CreateList) {
         return false;
     }
 
-    await queryClient.invalidateQueries({ queryKey: ['group', id.value] });
+    const normalizedList: Wishlist = { ...newList, wishes: newList.wishes ?? [] };
+    queryClient.setQueryData<Wishlist>(['wishlist', normalizedList.id], normalizedList);
+    queryClient.setQueryData<WishlistGroup>(['group', id.value], (prev) => {
+        if (!prev) return prev;
+        return {
+            ...prev,
+            list: [normalizedList, ...(prev.list ?? [])],
+        };
+    });
+    queryClient.invalidateQueries({ queryKey: ['group', id.value] });
     toast.success(`Liste « ${newList.title} » créée et ajoutée au groupe ! 🎉`);
     return true;
 }

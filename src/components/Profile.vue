@@ -22,12 +22,13 @@ import { useRouter } from 'vue-router';
 import Avatar from './ui/avatar/Avatar.vue';
 import CreateGroupModal from './modals/CreateGroupModal.vue';
 import { createGroup } from '@/utils/api';
-import type { CreateGroup } from '@/utils/types';
-import { useMutation } from '@tanstack/vue-query';
+import type { CreateGroup, WishlistGroup } from '@/utils/types';
+import { useMutation, useQueryClient } from '@tanstack/vue-query';
 import { toast } from 'vue-sonner';
 
 const router = useRouter();
 const store = useUserStore();
+const queryClient = useQueryClient();
 
 const lists = computed(() => getLists());
 const recentGroups = computed(() => getRecentGroups());
@@ -47,20 +48,30 @@ function goToGroup(id: string) {
 const createGroupMutation = useMutation({
     mutationFn: (data: CreateGroup) => createGroup(data),
     onSuccess: (data) => {
-        if (data) {
-            saveRecentGroup({ id: data.id, title: data.title });
-            createGroupModalOpen.value = false;
-            toast.success(`Événement « ${data.title} » créé ! 🎉`);
-            router.push(`/group/${data.id}`);
+        if (!data) {
+            toast.error('Erreur lors de la création du groupe.');
+            return;
         }
+        saveRecentGroup({ id: data.id, title: data.title });
+        queryClient.setQueryData<WishlistGroup>(['group', data.id], {
+            ...data,
+            list: data.list ?? [],
+        });
+        createGroupModalOpen.value = false;
+        toast.success(`Événement « ${data.title} » créé ! 🎉`);
+        router.push(`/group/${data.id}`);
     },
     onError: () => {
         toast.error('Erreur lors de la création du groupe.');
     },
 });
 
-function onCreateGroup(data: CreateGroup) {
-    createGroupMutation.mutate(data);
+async function onCreateGroup(data: CreateGroup) {
+    try {
+        await createGroupMutation.mutateAsync(data);
+    } catch {
+        // Error handled by mutation onError
+    }
 }
 
 function logout() {
