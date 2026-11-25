@@ -34,7 +34,7 @@ const boughtBySomeoneElse = computed(() =>
 )
 
 function onBuyAction() {
-    if (isBuyer.value) {
+    if (props.bought_by) {
         props.onBuy(props.id, true)
         return
     }
@@ -196,9 +196,11 @@ const formattedDomain = computed(() => {
         @delete="(id) => { infosModalOpen = false; props.onDelete(id); }"
     />
     <BuyModal
+        v-if="buyModalOpen"
         :open="buyModalOpen"
         :wish-name="props.name"
         :is-reserved="isBuyer"
+        :bought-by="props.bought_by"
         @close="buyModalOpen = false"
         @validate="onBuyAction"
     />

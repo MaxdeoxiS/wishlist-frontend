@@ -11,7 +11,7 @@ import { ref, watch } from 'vue';
 
 const emit = defineEmits(['update:filter'])
 
-const props = defineProps<{ withList?: boolean }>()
+const props = defineProps<{ withList?: boolean; suggestedUsers?: string[] }>()
 
 const searchValue = ref("")
 
@@ -54,6 +54,6 @@ function clearSearch() {
             </button>
         </div>
 
-        <Profile />
+        <Profile :suggested-users="props.suggestedUsers" />
     </header>
 </template>

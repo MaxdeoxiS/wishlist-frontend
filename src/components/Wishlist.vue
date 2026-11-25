@@ -79,6 +79,37 @@ const filteredWishes = computed(() => props.wishes.filter(w => w.name.toLowerCas
 const totalCount = computed(() => props.wishes.length);
 const boughtCount = computed(() => props.wishes.filter(w => !!w.bought_by).length);
 
+const suggestedUsers = computed(() => {
+    const seen = new Set<string>();
+    const users: string[] = [];
+    const add = (name?: string) => {
+        const trimmed = name?.trim();
+        if (!trimmed) return;
+        const key = trimmed.toLowerCase();
+        if (!seen.has(key)) {
+            seen.add(key);
+            users.push(trimmed);
+        }
+    };
+    add(props.user);
+    if (props.group?.list) {
+        for (const l of props.group.list) {
+            add(l.user);
+        }
+    }
+    for (const w of props.wishes) {
+        add(w.bought_by);
+    }
+    if (props.group?.list) {
+        for (const l of props.group.list) {
+            for (const w of l.wishes || []) {
+                add(w.bought_by);
+            }
+        }
+    }
+    return users;
+});
+
 const addModalOpen = ref(false);
 const ownershipModalOpen = ref(false);
 
@@ -93,7 +124,7 @@ function navigateToList(listId: string) {
 
 <template>
     <div class="flex min-h-screen w-full flex-col bg-muted/40 pb-24 sm:pb-12">
-        <ListHeader v-model:filter="filter" withList />
+        <ListHeader v-model:filter="filter" withList :suggested-users="suggestedUsers" />
 
         <div class="flex flex-col sm:gap-4 sm:py-6 px-3 sm:px-6 md:max-w-[960px] md:mx-auto w-full">
             <!-- Breadcrumbs if group -->

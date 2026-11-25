@@ -177,6 +177,30 @@ const existingListIds = computed(() => {
     return data.value?.list?.map((l) => l.id) || [];
 });
 
+const suggestedUsers = computed(() => {
+    const lists = data.value?.list || [];
+    const seen = new Set<string>();
+    const users: string[] = [];
+    const add = (name?: string) => {
+        const trimmed = name?.trim();
+        if (!trimmed) return;
+        const key = trimmed.toLowerCase();
+        if (!seen.has(key)) {
+            seen.add(key);
+            users.push(trimmed);
+        }
+    };
+    for (const l of lists) {
+        add(l.user);
+    }
+    for (const l of lists) {
+        for (const w of l.wishes || []) {
+            add(w.bought_by);
+        }
+    }
+    return users;
+});
+
 function openAddModal(mode: 'existing' | 'new' = 'new') {
     defaultModalMode.value = mode;
     addModalOpen.value = true;
@@ -331,7 +355,7 @@ async function share() {
 
 <template>
     <div class="flex min-h-screen w-full flex-col bg-muted/40 pb-24 sm:pb-12">
-        <ListHeader />
+        <ListHeader :suggested-users="suggestedUsers" />
 
         <!-- Skeleton Loading -->
         <div v-if="isLoading" class="max-w-[960px] mx-auto px-4 py-6 space-y-4 w-full">

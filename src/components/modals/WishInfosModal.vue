@@ -2,7 +2,7 @@
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '../ui/dialog';
 import type { Wish } from '@/utils/types';
 import { Button } from '../ui/button';
-import { Gift, ExternalLink, CheckCircle2, MessageSquare, Trash2, Calendar, Maximize2 } from 'lucide-vue-next';
+import { Gift, ExternalLink, CheckCircle2, MessageSquare, Trash2, Calendar, Maximize2, X } from 'lucide-vue-next';
 import { computed, ref } from 'vue';
 import ImageViewerModal from './ImageViewerModal.vue';
 
@@ -176,6 +176,15 @@ const formattedDate = computed(() => {
                         >
                             <Gift class="w-4 h-4" />
                             Je réserve ce cadeau
+                        </Button>
+                        <Button
+                            v-else
+                            variant="outline"
+                            class="rounded-xl h-11 w-full sm:w-auto border-destructive/30 text-destructive hover:bg-destructive/10 hover:text-destructive font-semibold gap-2"
+                            @click="onBuy"
+                        >
+                            <X class="w-4 h-4" aria-hidden="true" />
+                            Annuler
                         </Button>
                     </div>
                 </template>
